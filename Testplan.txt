@@ -1,0 +1,187 @@
+=================================================================
+TESTPLAN - SPORTSCHOOL "DE KAST" RECEPTIE CLI
+Fase 3 - Werkproces B1-K1-W4 "Test software"
+=================================================================
+
+DOEL
+----
+Dit testplan beschrijft de testscenario's waarmee wordt gecontroleerd
+of de gerealiseerde MVP voldoet aan de acceptatiecriteria van de
+gekozen kernflows. Voor elke user story is minimaal één hoofdscenario
+(happy path) en één alternatief/negatief scenario opgenomen.
+
+GEDEKTE USER STORIES
+---------------------
+  US-01  Toegang op abonnementstype
+  US-02  Abonnement annuleren
+  US-04  Cursus-addendum vereist voor inschrijving
+  US-05  Inschrijven voor een cursus
+  US-06  Cursusinschrijving annuleren
+  US-07  Afspraak met personal coach
+
+TESTSOORTEN
+-----------
+  - Integratietest: elk testgeval roept de service-laag (Sportschool.cs)
+    aan zoals de CLI dat ook doet, en controleert de samenwerking
+    tussen model (Sporter/Cursus/Coach) en businesslogica.
+  - Acceptatietest (usability): handmatige doorloop van de CLI-menu's
+    (zie hoofdstuk "Acceptatietest / usability" onderaan) om te
+    controleren of een medewerker de flows zonder toelichting kan
+    uitvoeren en of meldingen begrijpelijk zijn.
+
+TESTOMGEVING
+------------
+  - .NET SDK 10.0.400
+  - Testframework: xUnit
+  - Testproject: SportschoolDeKast.Tests (verwijst naar SportschoolDeKast.csproj)
+  - Uitvoeren met: dotnet test (vanuit de map SportschoolDeKast.Tests)
+
+-----------------------------------------------------------------
+TESTGEVALLEN
+-----------------------------------------------------------------
+
+US-01 - Toegang op abonnementstype
+-----------------------------------
+TC-01 (hoofdscenario)
+  Testcode: TC01_EenKeerPerWeek_EersteBezoek_GeeftToegang
+  Stappen: Sporter met "1x per week" (nog 0 bezoeken) probeert toegang.
+  Testdata: Sporter #1 Anna de Vries, EenKeerPerWeek, 0 bezoeken deze week.
+  Verwacht resultaat: Toegang verleend.
+
+TC-02 (alternatief)
+  Testcode: TC02_EenKeerPerWeek_TweedeBezoekZelfdeWeek_WordtGeweigerd
+  Stappen: Dezelfde sporter probeert een tweede keer toegang in dezelfde week.
+  Testdata: Sporter #1, na 1 geslaagd bezoek.
+  Verwacht resultaat: Toegang geweigerd met melding "weeklimiet ... bereikt".
+
+TC-03 (hoofdscenario)
+  Testcode: TC03_Onbeperkt_MeerdereBezoeken_GeeftAltijdToegang
+  Stappen: Sporter met "Onbeperkt" probeert 5x achter elkaar toegang.
+  Testdata: Sporter #3 Chantal Bakker, Onbeperkt.
+  Verwacht resultaat: Elke poging geeft toegang (geen limiet).
+
+TC-04 (alternatief)
+  Testcode: TC04_OnbekendeSporter_WordtGeweigerd
+  Stappen: Toegang aanvragen met een niet-bestaand sporter-ID.
+  Testdata: Sporter-ID 999 (bestaat niet).
+  Verwacht resultaat: Toegang geweigerd met melding "Onbekende sporter".
+
+TC-05 (alternatief)
+  Testcode: TC05_GeannuleerdAbonnement_GeeftGeenToegang
+  Stappen: Abonnement annuleren, daarna toegang aanvragen.
+  Testdata: Sporter #1, abonnement geannuleerd.
+  Verwacht resultaat: Toegang geweigerd met melding "niet actief".
+
+TC-06 (acceptatiecriterium: logging)
+  Testcode: TC06_ToegangspogingenWordenVastgelegdInLog
+  Stappen: Eén geslaagde en één geweigerde toegangspoging uitvoeren.
+  Verwacht resultaat: Beide pogingen staan in de toegangslog (2 regels).
+
+US-02 - Abonnement annuleren
+-----------------------------
+TC-07 (hoofdscenario)
+  Testcode: TC07_ActiefAbonnement_KanGeannuleerdWorden
+  Stappen: Actief abonnement annuleren.
+  Testdata: Sporter #1, actief abonnement.
+  Verwacht resultaat: Succes; abonnement staat op inactief.
+
+TC-08 (alternatief)
+  Testcode: TC08_AlGeannuleerdAbonnement_GeeftFoutmelding
+  Stappen: Een reeds geannuleerd abonnement nogmaals annuleren.
+  Verwacht resultaat: Mislukt, met melding dat er al geen actief abonnement is.
+
+TC-09 (integratie US-01 + US-02)
+  Stappen: Toegang aanvragen (moet lukken) -> annuleren -> toegang opnieuw
+           aanvragen (moet nu mislukken).
+  Verwacht resultaat: Eerste poging toegestaan, tweede geweigerd.
+
+US-04 + US-05 - Cursusinschrijving (addendum verplicht)
+---------------------------------------------------------
+TC-10 (hoofdscenario)
+  Testcode: TC10_MetAddendum_InschrijvenLukt
+  Stappen: Sporter mét cursus-addendum schrijft in voor Yoga.
+  Testdata: Sporter #2 Bram Jansen (heeft addendum).
+  Verwacht resultaat: Inschrijving lukt.
+
+TC-11 (alternatief)
+  Testcode: TC11_ZonderAddendum_InschrijvenWordtGeweigerd
+  Stappen: Sporter zonder addendum probeert in te schrijven voor Yoga.
+  Testdata: Sporter #1 Anna de Vries (geen addendum).
+  Verwacht resultaat: Geweigerd met melding over ontbrekend addendum.
+
+TC-12 (alternatief)
+  Testcode: TC12_DubbeleInschrijving_WordtVoorkomen
+  Stappen: Sporter schrijft twee keer in voor dezelfde cursus.
+  Verwacht resultaat: Tweede poging geweigerd: "al ingeschreven".
+
+TC-13 (alternatief)
+  Testcode: TC13_VolleCursus_WordtGeweigerd
+  Stappen: Cursus met capaciteit 1 (Paaldansen) wordt volgeboekt; een
+           tweede sporter probeert alsnog in te schrijven.
+  Verwacht resultaat: Geweigerd met melding dat de cursus vol zit.
+
+TC-14 (alternatief)
+  Testcode: TC14_NietBestaandeCursus_GeeftFoutmelding
+  Stappen: Inschrijven voor een cursus die niet bestaat ("Kickboksen").
+  Verwacht resultaat: Foutmelding "bestaat niet".
+
+US-06 - Cursusinschrijving annuleren
+--------------------------------------
+TC-15 (hoofdscenario)
+  Testcode: TC15_BestaandeInschrijving_KanGeannuleerdWorden
+  Stappen: Ingeschreven sporter annuleert de inschrijving.
+  Verwacht resultaat: Succes; sporter staat niet meer in de deelnemerslijst.
+
+TC-16 (alternatief)
+  Testcode: TC16_NietIngeschreven_AnnulerenGeeftFoutmelding
+  Stappen: Annuleren van een inschrijving die niet bestaat.
+  Verwacht resultaat: Foutmelding dat de sporter niet was ingeschreven.
+
+TC-17 (integratie)
+  Testcode: TC17_NaAnnuleren_KomtPlekVrijVoorAndereSporter
+  Stappen: Volle cursus -> annuleren -> andere sporter schrijft in.
+  Verwacht resultaat: De tweede sporter kan alsnog inschrijven.
+
+US-07 - Afspraak met personal coach
+--------------------------------------
+TC-18 (hoofdscenario)
+  Testcode: TC18_BeschikbaarMoment_KanGeboektWorden
+  Stappen: Sporter boekt een vrij moment bij coach "Jan".
+  Verwacht resultaat: Afspraak bevestigd.
+
+TC-19 (alternatief)
+  Testcode: TC19_DubbeleBoeking_WordtVoorkomen
+  Stappen: Twee verschillende sporters proberen hetzelfde moment te boeken.
+  Verwacht resultaat: Tweede boeking geweigerd: "niet beschikbaar".
+
+TC-20 (alternatief)
+  Testcode: TC20_OnbekendeCoach_GeeftFoutmelding
+  Stappen: Boeken bij een coach die niet bestaat.
+  Verwacht resultaat: Foutmelding "bestaat niet".
+
+TC-21 (alternatief)
+  Testcode: TC21_NietBeschikbaarMoment_GeeftFoutmelding
+  Stappen: Boeken van een moment dat niet in de agenda van de coach staat.
+  Verwacht resultaat: Foutmelding "niet beschikbaar".
+
+-----------------------------------------------------------------
+ACCEPTATIETEST / USABILITY (handmatig, via de CLI)
+-----------------------------------------------------------------
+Uit te voeren door de applicatie te starten met `dotnet run` in de
+map SportschoolDeKast, en de menu-opties te doorlopen zonder verdere
+uitleg dan de teksten die de applicatie zelf toont.
+
+AT-01 Een medewerker kan zonder voorkennis via het menu een sporter
+      inchecken (optie 1) en begrijpt de melding bij weigering.
+AT-02 Een medewerker kan een abonnement annuleren (optie 2) inclusief
+      de bevestigingsvraag, zonder per ongeluk direct te annuleren.
+AT-03 Een medewerker kan een sporter inschrijven voor een cursus
+      (optie 3), waarbij eerst het cursusoverzicht (optie 7) zichtbaar
+      is zodat een geldige cursusnaam ingevuld kan worden.
+AT-04 Een medewerker kan een coach-afspraak inplannen (optie 5),
+      waarbij de beschikbare coaches en momenten eerst getoond worden.
+AT-05 Alle foutmeldingen (verkeerde invoer, onbekende sporter/cursus/
+      coach) zijn in begrijpelijk Nederlands en leggen uit waarom een
+      actie niet is gelukt.
+
+Resultaten van de acceptatietest staan in Testrapport.txt.

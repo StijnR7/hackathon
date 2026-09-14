@@ -1,0 +1,115 @@
+=================================================================
+TESTRAPPORT - SPORTSCHOOL "DE KAST" RECEPTIE CLI
+Fase 3 - Werkproces B1-K1-W4 "Test software"
+=================================================================
+
+UITGEVOERD OP: 2026-09-14
+UITGEVOERD DOOR: geautomatiseerde testsuite (xUnit) + handmatige
+                 acceptatietest via de CLI (`dotnet run`)
+OMGEVING: .NET SDK 10.0.400, Windows
+
+-----------------------------------------------------------------
+1. RESULTAAT INTEGRATIETESTS (AUTOMATISCH, xUnit)
+-----------------------------------------------------------------
+Uitgevoerd met: dotnet test (in map SportschoolDeKast.Tests)
+
+Testresultaat:
+  Total: 21   Passed: 21   Failed: 0   Skipped: 0   Duration: ~230 ms
+
+| Testcode | User story | Scenario                                   | Resultaat |
+|----------|-----------|---------------------------------------------|-----------|
+| TC-01    | US-01     | 1x/week, eerste bezoek -> toegang            | GESLAAGD  |
+| TC-02    | US-01     | 1x/week, tweede bezoek -> geweigerd          | GESLAAGD  |
+| TC-03    | US-01     | Onbeperkt, 5x bezoek -> altijd toegang       | GESLAAGD  |
+| TC-04    | US-01     | Onbekende sporter -> geweigerd               | GESLAAGD  |
+| TC-05    | US-01     | Geannuleerd abonnement -> geen toegang       | GESLAAGD  |
+| TC-06    | US-01     | Toegangspogingen worden gelogd               | GESLAAGD  |
+| TC-07    | US-02     | Actief abonnement annuleren                  | GESLAAGD  |
+| TC-08    | US-02     | Dubbel annuleren -> foutmelding              | GESLAAGD  |
+| TC-09    | US-01/02  | Na annuleren vervalt toegang direct          | GESLAAGD  |
+| TC-10    | US-04/05  | Met addendum inschrijven -> lukt             | GESLAAGD  |
+| TC-11    | US-04     | Zonder addendum inschrijven -> geweigerd     | GESLAAGD  |
+| TC-12    | US-05     | Dubbele inschrijving -> voorkomen            | GESLAAGD  |
+| TC-13    | US-05     | Volle cursus -> geweigerd                    | GESLAAGD  |
+| TC-14    | US-05     | Niet-bestaande cursus -> foutmelding         | GESLAAGD  |
+| TC-15    | US-06     | Inschrijving annuleren -> plek vrij          | GESLAAGD  |
+| TC-16    | US-06     | Annuleren zonder inschrijving -> fout        | GESLAAGD  |
+| TC-17    | US-05/06  | Na annuleren plek beschikbaar voor ander     | GESLAAGD  |
+| TC-18    | US-07     | Beschikbaar moment boeken -> lukt            | GESLAAGD  |
+| TC-19    | US-07     | Dubbele boeking -> voorkomen                 | GESLAAGD  |
+| TC-20    | US-07     | Onbekende coach -> foutmelding               | GESLAAGD  |
+| TC-21    | US-07     | Niet-beschikbaar moment -> foutmelding       | GESLAAGD  |
+
+Conclusie deel 1:
+Alle 21 testgevallen zijn geslaagd. Elke user story uit de gekozen
+kernflows (US-01, US-02, US-04, US-05, US-06, US-07) heeft zowel een
+geslaagd hoofdscenario als minimaal één correct afgehandeld
+alternatief/negatief scenario. Er zijn geen functionele afwijkingen
+gevonden ten opzichte van de acceptatiecriteria uit de user stories.
+
+-----------------------------------------------------------------
+2. RESULTAAT ACCEPTATIETEST / USABILITY (HANDMATIG)
+-----------------------------------------------------------------
+Uitgevoerd door de CLI te starten (`dotnet run`) en de menu-opties te
+doorlopen zoals een medewerker dat zou doen, zonder aanvullende uitleg
+buiten de teksten die de applicatie zelf toont.
+
+AT-01 Inchecken van een sporter (optie 1)
+  Waargenomen: sporter #1 (Anna, 1x/week) kreeg bij het eerste bezoek
+  de melding "toegang verleend. Welkom!"; bij een tweede poging
+  dezelfde sessie de melding "weeklimiet (1x) al bereikt. Toegang
+  geweigerd." Beide meldingen zijn duidelijk en direct te begrijpen.
+  Resultaat: GESLAAGD
+
+AT-02 Abonnement annuleren met bevestiging (optie 2)
+  Waargenomen: de applicatie vraagt expliciet "Weet je zeker dat je
+  het abonnement van Anna de Vries wilt annuleren? (ja/nee)" voordat
+  er iets wijzigt. Na bevestiging verscheen "Abonnement van Anna de
+  Vries is geannuleerd." Een vervolgpoging tot inchecken werd terecht
+  geweigerd ("abonnement is opgezegd/niet actief").
+  Resultaat: GESLAAGD
+
+AT-03 Inschrijven voor een cursus (optie 3), inclusief cursusoverzicht
+  Waargenomen: het cursusoverzicht (bezetting per cursus) wordt
+  automatisch getoond vlak voordat om een cursusnaam wordt gevraagd,
+  zodat een medewerker geen aparte stap hoeft te nemen om geldige
+  cursusnamen op te zoeken. Inschrijving van Bram Jansen (met
+  addendum) voor Yoga lukte; een tweede poging voor dezelfde cursus
+  gaf terecht "is al ingeschreven voor Yoga."
+  Resultaat: GESLAAGD
+
+AT-04 Coach-afspraak inplannen (optie 5)
+  Waargenomen: beschikbare coaches en hun vrije momenten worden eerst
+  getoond. Na het boeken van "Dinsdag 10:00" bij Jan verdween dat
+  moment direct uit het overzicht bij een volgende boekingspoging, en
+  een nieuwe poging op hetzelfde moment gaf terecht "niet beschikbaar
+  bij Jan."
+  Resultaat: GESLAAGD
+
+AT-05 Duidelijkheid van foutmeldingen
+  Waargenomen: alle geweigerde acties (onbekende sporter, ontbrekend
+  addendum, volle cursus, dubbele boeking, niet-bestaande coach) geven
+  een melding in begrijpelijk Nederlands die de reden van weigering
+  benoemt. Geen van de meldingen bevat technisch jargon of foutcodes.
+  Resultaat: GESLAAGD
+
+Conclusie deel 2:
+De applicatie is voor een medewerker zonder training te bedienen: elk
+menu-item toont waar nodig eerst relevante context (bijv. het
+cursus- of coachoverzicht) voordat om invoer wordt gevraagd, en elke
+weigering wordt met een begrijpelijke reden toegelicht.
+
+-----------------------------------------------------------------
+3. EINDCONCLUSIE
+-----------------------------------------------------------------
+Zowel de geautomatiseerde integratietests (21/21 geslaagd) als de
+handmatige acceptatie-/usabilitytest (5/5 scenario's geslaagd) tonen
+aan dat de MVP voldoet aan de acceptatiecriteria van de gekozen
+kernflows (US-01, US-02, US-04, US-05, US-06, US-07). Er zijn tijdens
+dit testtraject geen functionele fouten gevonden die (nog) opgelost
+moeten worden.
+
+Aandachtspunt voor een volgende iteratie (buiten scope van dit
+prototype, zie ook DOCUMENTATIE.txt): er is geen automatische
+weekreset van de bezoekteller. Dit is bewust niet getest als "fout"
+omdat het een bekende, geaccepteerde beperking van dit prototype is.

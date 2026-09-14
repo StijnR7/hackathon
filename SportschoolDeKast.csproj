@@ -7,4 +7,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Voorkomt dat dit project de bestanden van het aparte testproject meecompileert
+         (SDK-style projects nemen standaard alle .cs-bestanden onder de projectmap mee). -->
+    <Compile Remove="SportschoolDeKast.Tests\**" />
+    <Compile Remove="bin\**" />
+    <Compile Remove="obj\**" />
+  </ItemGroup>
+
 </Project>
