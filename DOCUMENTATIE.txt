@@ -1,0 +1,148 @@
+=================================================================
+SPORTSCHOOL "DE KAST" - RECEPTIE CLI (C# / .NET)
+DOCUMENTATIE
+=================================================================
+
+WAT IS DIT?
+-----------
+Een console-applicatie (CLI, geen grafische interface) die de
+belangrijkste handmatige receptietaken van sportschool "De Kast"
+simuleert, zodat medewerkers deze zelf kunnen afhandelen:
+
+  - Sporters toegang verlenen op basis van hun abonnementstype
+  - Abonnementen annuleren
+  - Sporters inschrijven voor cursussen (yoga, pilates, paaldansen)
+  - Cursusinschrijvingen annuleren
+  - Afspraken inplannen met een personal coach
+
+Er is GEEN database gebruikt: alle data staat in het geheugen en
+wordt bij het opstarten gevuld met dummydata (4 sporters, 3
+cursussen, 2 coaches). Zodra je het programma afsluit, is de data
+weg. Dat is bewust simpel gehouden voor dit prototype.
+
+-------------------------------------------------------------
+PROJECTSTRUCTUUR
+-------------------------------------------------------------
+SportschoolDeKast/
+  Program.cs                  -> De CLI: menu, invoer, output
+  Models/
+    AbonnementType.cs          -> Enum: EenKeerPerWeek, TweeKeerPerWeek, Onbeperkt
+    Sporter.cs                  -> Een lid van de sportschool
+    Cursus.cs                   -> Een cursusmoment (naam, tijd, capaciteit)
+    Coach.cs                    -> Een personal coach met agenda
+  Services/
+    Sportschool.cs               -> Alle bedrijfsregels/logica (los van de CLI)
+  SportschoolDeKast.csproj       -> Project-/build-configuratie (.NET)
+
+De scheiding is bewust:
+  - Models    = pure data, geen logica.
+  - Services  = business rules (validatie, regels, beslissingen).
+  - Program   = alleen invoer vragen, resultaten tonen (geen logica).
+Dit maakt de code overzichtelijk en later makkelijker uit te
+breiden of te testen, zonder dat de CLI-laag alle regels hoeft te
+kennen.
+
+-------------------------------------------------------------
+HOE STARTEN
+-------------------------------------------------------------
+Vereist: .NET SDK (getest met .NET 10).
+
+1. Open een terminal in de map "SportschoolDeKast" (waar het
+   .csproj-bestand staat).
+2. Voer uit:
+       dotnet run
+3. Het menu verschijnt in de terminal.
+
+In VS Code:
+  - Open de map "SportschoolDeKast" in VS Code.
+  - Installeer (indien nodig) de C# Dev Kit / C# extensie.
+  - Open Program.cs en start via de ingebouwde "Run"-knop, of
+    gebruik de terminal in VS Code met `dotnet run`.
+
+-------------------------------------------------------------
+MENU-OPTIES
+-------------------------------------------------------------
+1. Toegang verlenen (sporter inchecken)
+   Vraagt een sporter-ID en controleert of deze sporter naar
+   binnen mag, gebaseerd op het abonnementstype:
+     - "EenKeerPerWeek"  -> max. 1 bezoek per week
+     - "TweeKeerPerWeek" -> max. 2 bezoeken per week
+     - "Onbeperkt"       -> geen limiet
+   Een opgezegd (niet-actief) abonnement geeft altijd een
+   weigering. Elke poging (toegestaan of geweigerd) wordt
+   vastgelegd in de toegangslog (optie 8).
+
+2. Abonnement annuleren
+   Vraagt een sporter-ID, toont een bevestigingsvraag (ja/nee)
+   en zet het abonnement pas na bevestiging op inactief. Vanaf
+   dat moment krijgt de sporter geen toegang meer (optie 1).
+
+3. Inschrijven voor een cursus
+   Vraagt een sporter-ID en een cursusnaam. Voorwaarden:
+     - De sporter moet een cursus-addendum hebben.
+     - De sporter mag niet al ingeschreven zijn voor dezelfde
+       cursus (voorkomt dubbele inschrijving).
+     - De cursus mag niet vol zitten (capaciteitscheck).
+
+4. Cursusinschrijving annuleren
+   Vraagt een sporter-ID en cursusnaam, en maakt de plek weer
+   vrij als de sporter daadwerkelijk stond ingeschreven.
+
+5. Afspraak inplannen met personal coach
+   Toont eerst de beschikbare coaches met hun vrije momenten.
+   Na het kiezen van coach + moment wordt de afspraak geboekt en
+   verdwijnt dat moment uit de beschikbare tijden, zodat het niet
+   dubbel geboekt kan worden.
+
+6. Overzicht sporters
+   Toont alle sporters met hun abonnement, status, addendum en
+   aantal bezoeken deze week.
+
+7. Overzicht cursussen
+   Toont per cursus hoeveel plekken bezet zijn.
+
+8. Toegangslog bekijken
+   Toont alle toegangspogingen (tijdstip, sporter, resultaat),
+   zowel geslaagd als geweigerd.
+
+0. Afsluiten
+
+-------------------------------------------------------------
+DUMMYDATA (SEED) BIJ OPSTARTEN
+-------------------------------------------------------------
+Sporters:
+  #1 Anna de Vries   - EenKeerPerWeek   - geen addendum
+  #2 Bram Jansen     - TweeKeerPerWeek  - heeft addendum
+  #3 Chantal Bakker  - Onbeperkt        - heeft addendum
+  #4 Dirk Smit       - EenKeerPerWeek   - geen addendum
+
+Cursussen:
+  Yoga        - Maandag 18:00   - max. 2 deelnemers
+  Pilates     - Woensdag 19:00  - max. 2 deelnemers
+  Paaldansen  - Vrijdag 20:00   - max. 1 deelnemer
+
+Coaches:
+  Jan   - Dinsdag 10:00, Dinsdag 11:00, Donderdag 09:00
+  Erik  - Maandag 08:00, Woensdag 17:00
+
+Voorbeeld om te testen:
+  - Log sporter #1 (Anna) twee keer in via optie 1: de eerste
+    keer wordt toegang verleend, de tweede keer geweigerd
+    (weeklimiet van 1 bereikt).
+  - Probeer sporter #4 (Dirk, geen addendum) in te schrijven
+    voor Yoga via optie 3: dit wordt geweigerd.
+  - Probeer sporter #2 (Bram, wel addendum) in te schrijven voor
+    Yoga: dit lukt.
+
+-------------------------------------------------------------
+BEKENDE BEPERKINGEN (BEWUST, BUITEN SCOPE VAN DIT PROTOTYPE)
+-------------------------------------------------------------
+  - Geen database/opslag: data reset bij elke herstart.
+  - Geen automatische weekreset van bezoekaantallen (in een
+    volgende iteratie zou dit bijv. via een geplande taak of
+    datumvergelijking kunnen).
+  - Geen onderscheid in rollen/rechten tussen "sporter" en
+    "medewerker" binnen de CLI zelf (dit is een intern
+    receptie-hulpmiddel, niet de sporter-facing app).
+  - Geen wachtwoorden/authenticatie: dit is een lokaal
+    hulpmiddel voor receptiepersoneel, geen publiek systeem.
