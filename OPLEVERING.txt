@@ -1,0 +1,68 @@
+=================================================================
+OPLEVERING HACKATON 1 - SPORTSCHOOL "DE KAST"
+Overzicht bewijslast per werkproces (volgens de projectleeswijzer v4.0)
+=================================================================
+[x] = in deze repository    [ ] = zelf nog doen
+
+-----------------------------------------------------------------
+FASE 1 - ONTWERPEN (B1-K1-W2)
+-----------------------------------------------------------------
+[x] Functioneel ontwerp met gekozen user stories + prioriteit
+      Ontwerp/1_FunctioneelOntwerp.txt
+[x] Gegevenslaag: ERD als DBML
+      Ontwerp/datamodel.dbml
+      Render-check op dbdiagram.io uitgevoerd: 0 fouten, 0 waarschuwingen.
+[x] Gebruikersperspectief: use case diagram
+      Ontwerp/usecasediagram.puml (+ .png)
+[x] Gebruikersperspectief: wireframes/mock-ups + schermstroom
+      Ontwerp/3_Wireframes.txt
+[x] Programmalogica: activiteitendiagrammen in PlantUML
+      (start/stop, beslissingen, swimlanes, fork/join)
+      Ontwerp/activiteitendiagram_toegang.puml (+ .png)
+      Ontwerp/activiteitendiagram_cursusinschrijving.puml (+ .png)
+      Render-check op plantuml.com uitgevoerd: foutloos.
+[x] Extra: klassendiagram
+      Ontwerp/klassendiagram.puml (+ .png)
+[x] Ontwerptoelichting met onderbouwde keuzes en een paragraaf over
+    privacy, ethiek en security
+      Ontwerp/2_TechnischOntwerp.txt
+[ ] Akkoord/feedback van de begeleider
+      Ontwerp/4_Akkoord.txt laten invullen
+[ ] (Optioneel) ontwerp laten beoordelen door de Ontwerpcoach (modus 4)
+
+-----------------------------------------------------------------
+FASE 2 - REALISEREN (B1-K1-W3)
+-----------------------------------------------------------------
+[x] Git-repository met herleidbare commits
+      https://github.com/StijnR7/hackathon
+[x] Werkende MVP met dummydata
+      Program.cs, Services/, Models/
+[x] Code conventions, zinvol commentaar, logische structuur
+      Drie lagen; conventions beschreven in DOCUMENTATIE.txt, hoofdstuk C
+[x] Validatie, foutafhandeling, terugkoppeling en security in de code
+      Invoerhulpen in Program.cs, (Succes, Melding) uit de servicelaag,
+      gehashte pincode, rolscheiding, audit logs
+[x] Systeem- en gebruikersdocumentatie
+      DOCUMENTATIE.txt
+
+-----------------------------------------------------------------
+FASE 3 - TESTEN (B1-K1-W4)
+-----------------------------------------------------------------
+[x] Testplan met scenario's voor alle acceptatiecriteria
+    (hoofd- én alternatief scenario per story)
+      Testplan.txt
+[x] Integratietest uitgevoerd (35 geautomatiseerde tests)
+      SportschoolDeKast.Tests/SportschoolTests.cs
+[x] Acceptatietest incl. usability uitgevoerd (AT-01 t/m AT-06)
+      Testrapport.txt, hoofdstuk 3
+[x] Testrapport met resultaten, bevinding, herstel en conclusies
+      Testrapport.txt
+[ ] Uitlegvideo opnemen
+      Script: Videoscript.txt
+
+-----------------------------------------------------------------
+SCRUM / OPLEVERING
+-----------------------------------------------------------------
+[ ] Product review(s) met de begeleider
+[ ] Retrospective(s): wat ging goed, wat kan beter, wat neem je mee naar
+    Hackaton 2 (dit gaat over jouw eigen ervaring, dus zelf schrijven)

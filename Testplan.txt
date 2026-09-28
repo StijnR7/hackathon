@@ -1,187 +1,160 @@
 =================================================================
-TESTPLAN - SPORTSCHOOL "DE KAST" RECEPTIE CLI
+TESTPLAN - SPORTSCHOOL "DE KAST" SELFSERVICE CLI
 Fase 3 - Werkproces B1-K1-W4 "Test software"
 =================================================================
 
-DOEL
-----
-Dit testplan beschrijft de testscenario's waarmee wordt gecontroleerd
-of de gerealiseerde MVP voldoet aan de acceptatiecriteria van de
-gekozen kernflows. Voor elke user story is minimaal één hoofdscenario
-(happy path) en één alternatief/negatief scenario opgenomen.
+1. DOEL
+-------
+Aantonen dat de MVP voldoet aan alle acceptatiecriteria uit
+Ontwerp/1_FunctioneelOntwerp.txt (hoofdstuk 5). Die criteria vormen de
+100%-basis. Per user story is er minimaal één hoofdscenario (H) en één
+alternatief scenario (A). Samenhang tussen stories wordt getest met
+integratiescenario's (I).
 
-GEDEKTE USER STORIES
+2. SCOPE
+--------
+  In scope:   US-01 t/m US-08 (US-09 wordt aangetoond via code
+              conventions en de Git-historie, niet via tests).
+  Buiten:     performance, meerdere kiosken tegelijk, echte hardware
+              (paslezer, deurslot).
+
+3. TESTSOORTEN EN AANPAK
+------------------------
+  a. Integratietest (automatisch, xUnit)
+     Elk testgeval roept de servicelaag aan zoals de CLI dat doet en
+     controleert de samenwerking tussen modellen en bedrijfsregels. Elke
+     test krijgt een eigen, verse Sportschool met dummydata en een vaste
+     klok (maandag 28-09-2026 10:00), zodat datumregels (opzegtermijn,
+     weekreset) herhaalbaar zijn.
+     Uitvoeren: `dotnet test` in de map SportschoolDeKast.Tests.
+
+  b. Acceptatietest incl. usability (handmatig, via de CLI)
+     De tester doorloopt de schermen zoals een sporter of medewerker dat
+     zou doen, zonder andere uitleg dan de teksten in de applicatie, en
+     let op begrijpelijkheid, volgorde en foutafhandeling.
+     Uitvoeren: `dotnet run --project SportschoolDeKast.csproj`.
+
+4. TESTOMGEVING EN TESTDATA
+---------------------------
+  .NET SDK 10.0.400, xUnit, Windows 11.
+  Testdata = dummydata uit Program.cs (zie DOCUMENTATIE.txt, hoofdstuk G):
+    #1 Anna  1x/week, geen addendum      #3 Chantal  onbeperkt, addendum
+    #2 Bram  2x/week, addendum           #4 Dirk     1x/week, geen addendum
+    Cursussen Yoga (max 2), Pilates (max 2), Paaldansen (max 1)
+    Coaches Jan en Erik; medewerker #1 met pincode 1234
+
+5. INTEGRATIETESTGEVALLEN
+-------------------------
+Formaat: ID | soort | criterium | testdata + stappen | verwacht resultaat
+
+US-01 Toegang op abonnementstype
+TC-01 | H | AC-01.1 | Anna checkt 1x in               | Toegang verleend
+TC-02 | A | AC-01.1 | Anna checkt 2x in dezelfde week | 2e keer geweigerd: "weeklimiet"
+TC-03 | A | AC-01.1 | Bram checkt 3x in               | 1e+2e toegestaan, 3e geweigerd
+TC-04 | H | AC-01.2 | Chantal checkt 10x in           | Altijd toegang
+TC-05 | H | AC-01.1 | Anna ma in; zo opnieuw; volgende ma opnieuw
+                                                        | Zo geweigerd, volgende ma toegestaan
+TC-06 | A | AC-01.3 | Sporter-ID 999 checkt in        | Geweigerd: "Onbekende sporter"
+TC-07 | H | AC-01.4 | 1 geslaagde + 2 geweigerde pogingen
+                                                        | 3 logregels, juiste resultaten
+
+US-02 Abonnement annuleren
+TC-08 | H | AC-02.2/3 | Anna zegt op op 28-09-2026    | Einddatum 28-10-2026, melding
+                                                          "Bevestiging" met einddatum
+TC-09 | A | AC-02    | Anna zegt 2x op                | 2e keer: "al opgezegd"
+TC-10 | I | AC-02.2  | Chantal zegt op; checkt in op 27-10-2026
+                                                        | Toegang (binnen opzegtermijn)
+TC-11 | I | AC-02.2  | Chantal zegt op; checkt in op 28-10-2026
+                                                        | Geweigerd: "niet actief"
+
+US-03 Abonnementsbeheer door medewerker
+TC-12 | H | AC-03.1 | Zoek "jans"                     | Precies Bram Jansen
+TC-13 | H | AC-03.1 | Zoek "3", toon status           | Chantal Bakker, "Actief"
+TC-14 | A | AC-03.1 | Zoek "Onbekend" en "   "        | Lege lijst
+TC-15 | H | AC-03.2 | Medewerker #1 zet Anna op onbeperkt + addendum
+                                                        | Gewijzigd; 1 logregel met medewerker
+                                                          en sporter
+TC-16 | A | AC-03.2 | Wijzig Anna naar haar huidige waarden
+                                                        | "niets gewijzigd", geen logregel
+TC-17 | H | AC-03.2 | Medewerker #1 zegt op voor Dirk | Logregel noemt medewerker en sporter
+
+US-04 + US-05 Cursusinschrijving
+TC-18 | H | AC-05    | Bram schrijft in voor Yoga      | "Bevestiging", Bram in deelnemers
+TC-19 | A | AC-04.1  | Anna (geen addendum) -> Yoga    | Geweigerd: "addendum"
+TC-20 | A | AC-05.3  | Bram 2x Yoga ("Yoga", "yoga")   | 2e keer "al ingeschreven", 1 deelnemer
+TC-21 | A | AC-05    | Bram -> Paaldansen, Chantal -> Paaldansen
+                                                        | Chantal geweigerd: "vol"
+TC-22 | A | AC-05    | Bram -> "Kickboksen"            | "bestaat niet"
+TC-23 | I | AC-03/04 | Dirk -> Pilates (geweigerd); medewerker geeft addendum;
+                       Dirk -> Pilates                  | 2e poging lukt
+TC-35 | A | AC-04.1  | Inschrijfrecht vooraf: Dirk (geen addendum), Bram (wel),
+                       Bram na afloop opzegtermijn   | nee / ja / nee "geen actief abonnement"
+
+US-06 Cursusinschrijving annuleren
+TC-24 | H | AC-06.1/2 | Bram schrijft in en annuleert Yoga
+                                                        | "Bevestiging", deelnemerslijst leeg
+TC-25 | A | AC-06    | Bram annuleert Yoga zonder inschrijving
+                                                        | "niet ingeschreven"
+TC-26 | I | AC-06.1  | Bram vult Paaldansen, annuleert; Chantal schrijft in
+                                                        | Chantal ingeschreven
+
+US-07 Afspraak met personal coach
+TC-27 | H | AC-07.3  | Anna boekt "jan" "dinsdag 10:00" | "bevestigd", moment niet meer vrij
+TC-28 | A | AC-07.2  | Anna boekt Jan di 10:00, daarna Dirk hetzelfde
+                                                        | Dirk: "niet beschikbaar", boeking
+                                                          blijft van Anna
+TC-29 | A | AC-07    | Boek bij coach "Sanne"          | "bestaat niet"
+TC-30 | A | AC-07    | Boek Jan "Zaterdag 23:00"       | "niet beschikbaar"
+
+US-08 Persoonsgegevens en toegangscontrole
+TC-31 | H | AC-08.2  | Medewerker 1, pincode 1234      | Ingelogd
+TC-32 | A | AC-08.2  | Pincode 0000, lege pincode, ID 99
+                                                        | Alle drie geweigerd
+TC-33 | H | AC-08.1  | Bekijk opgeslagen pincode       | Niet "1234", 64 tekens (SHA-256)
+TC-34 | H | AC-08.1  | Anna en Bram checken in, bekijk toegangslog
+                                                        | Log bevat geen namen
+
+6. ACCEPTATIETESTSCENARIO'S (HANDMATIG, INCL. USABILITY)
+--------------------------------------------------------
+AT-01 Inchecken (US-01)
+  Stappen: hoofdmenu 1 -> ID 1 -> 1 -> 1.
+  Verwacht: 1e keer welkom, 2e keer weigering met reden (weeklimiet).
+
+AT-02 Opzeggen met bevestiging (US-02)
+  Stappen: sporter 1 -> 6 -> "nee"; 6 -> "ja"; 2; 6 -> "ja".
+  Verwacht: "nee" breekt af zonder wijziging; "ja" geeft bevestiging met
+  einddatum; status toont "Opgezegd, actief tot ..."; nogmaals opzeggen
+  geeft "al opgezegd".
+
+AT-03 Cursus inschrijven en annuleren (US-04, US-05, US-06)
+  Stappen: sporter 4 -> 3. Daarna sporter 2 -> 3 "yoga" "nee";
+  3 "yoga" "ja"; 3 "Yoga" "ja"; 4 "Yoga".
+  Verwacht: Dirk wordt direct geweigerd (geen addendum); bij Bram eerst
+  het overzicht, "nee" breekt af, "ja" schrijft in, de 2e keer
+  "al ingeschreven", annuleren geeft de plek vrij.
+
+AT-04 Coach-afspraak (US-07)
+  Stappen: sporter 2 -> 5 "Sanne"; 5 "jan" "dinsdag 10:00";
+  sporter 3 -> 5 "Jan" "Dinsdag 10:00".
+  Verwacht: onbekende coach gemeld; boeking bevestigd; bij Chantal staat
+  di 10:00 niet meer in de lijst en de poging wordt geweigerd.
+
+AT-05 Foutafhandeling en begrijpelijke meldingen (US-08)
+  Stappen: tekst "abc" als sporter-ID; menukeuze 9; ongeldige
+  abonnementskeuze bij de medewerker.
+  Verwacht: geen crash; een duidelijke melding en een nieuwe kans.
+
+AT-06 Rolscheiding en beheer (US-03, US-08)
+  Stappen: medewerker 1 met pincode 0000; daarna 1 met 1234 -> zoek "de",
+  zoek "xyz", wijzig sporter 1, zeg op voor sporter 2, bekijk beide logs.
+  Controleer ook dat het sportermenu geen beheeropties toont.
+  Verwacht: foute pincode geweigerd zonder te zeggen wat fout is;
+  zoeken, wijzigen en opzeggen werken; logs tonen wie wat deed; de
+  sporter ziet alleen de eigen functies.
+
+7. AFRONDINGSCRITERIA
 ---------------------
-  US-01  Toegang op abonnementstype
-  US-02  Abonnement annuleren
-  US-04  Cursus-addendum vereist voor inschrijving
-  US-05  Inschrijven voor een cursus
-  US-06  Cursusinschrijving annuleren
-  US-07  Afspraak met personal coach
-
-TESTSOORTEN
------------
-  - Integratietest: elk testgeval roept de service-laag (Sportschool.cs)
-    aan zoals de CLI dat ook doet, en controleert de samenwerking
-    tussen model (Sporter/Cursus/Coach) en businesslogica.
-  - Acceptatietest (usability): handmatige doorloop van de CLI-menu's
-    (zie hoofdstuk "Acceptatietest / usability" onderaan) om te
-    controleren of een medewerker de flows zonder toelichting kan
-    uitvoeren en of meldingen begrijpelijk zijn.
-
-TESTOMGEVING
-------------
-  - .NET SDK 10.0.400
-  - Testframework: xUnit
-  - Testproject: SportschoolDeKast.Tests (verwijst naar SportschoolDeKast.csproj)
-  - Uitvoeren met: dotnet test (vanuit de map SportschoolDeKast.Tests)
-
------------------------------------------------------------------
-TESTGEVALLEN
------------------------------------------------------------------
-
-US-01 - Toegang op abonnementstype
------------------------------------
-TC-01 (hoofdscenario)
-  Testcode: TC01_EenKeerPerWeek_EersteBezoek_GeeftToegang
-  Stappen: Sporter met "1x per week" (nog 0 bezoeken) probeert toegang.
-  Testdata: Sporter #1 Anna de Vries, EenKeerPerWeek, 0 bezoeken deze week.
-  Verwacht resultaat: Toegang verleend.
-
-TC-02 (alternatief)
-  Testcode: TC02_EenKeerPerWeek_TweedeBezoekZelfdeWeek_WordtGeweigerd
-  Stappen: Dezelfde sporter probeert een tweede keer toegang in dezelfde week.
-  Testdata: Sporter #1, na 1 geslaagd bezoek.
-  Verwacht resultaat: Toegang geweigerd met melding "weeklimiet ... bereikt".
-
-TC-03 (hoofdscenario)
-  Testcode: TC03_Onbeperkt_MeerdereBezoeken_GeeftAltijdToegang
-  Stappen: Sporter met "Onbeperkt" probeert 5x achter elkaar toegang.
-  Testdata: Sporter #3 Chantal Bakker, Onbeperkt.
-  Verwacht resultaat: Elke poging geeft toegang (geen limiet).
-
-TC-04 (alternatief)
-  Testcode: TC04_OnbekendeSporter_WordtGeweigerd
-  Stappen: Toegang aanvragen met een niet-bestaand sporter-ID.
-  Testdata: Sporter-ID 999 (bestaat niet).
-  Verwacht resultaat: Toegang geweigerd met melding "Onbekende sporter".
-
-TC-05 (alternatief)
-  Testcode: TC05_GeannuleerdAbonnement_GeeftGeenToegang
-  Stappen: Abonnement annuleren, daarna toegang aanvragen.
-  Testdata: Sporter #1, abonnement geannuleerd.
-  Verwacht resultaat: Toegang geweigerd met melding "niet actief".
-
-TC-06 (acceptatiecriterium: logging)
-  Testcode: TC06_ToegangspogingenWordenVastgelegdInLog
-  Stappen: Eén geslaagde en één geweigerde toegangspoging uitvoeren.
-  Verwacht resultaat: Beide pogingen staan in de toegangslog (2 regels).
-
-US-02 - Abonnement annuleren
------------------------------
-TC-07 (hoofdscenario)
-  Testcode: TC07_ActiefAbonnement_KanGeannuleerdWorden
-  Stappen: Actief abonnement annuleren.
-  Testdata: Sporter #1, actief abonnement.
-  Verwacht resultaat: Succes; abonnement staat op inactief.
-
-TC-08 (alternatief)
-  Testcode: TC08_AlGeannuleerdAbonnement_GeeftFoutmelding
-  Stappen: Een reeds geannuleerd abonnement nogmaals annuleren.
-  Verwacht resultaat: Mislukt, met melding dat er al geen actief abonnement is.
-
-TC-09 (integratie US-01 + US-02)
-  Stappen: Toegang aanvragen (moet lukken) -> annuleren -> toegang opnieuw
-           aanvragen (moet nu mislukken).
-  Verwacht resultaat: Eerste poging toegestaan, tweede geweigerd.
-
-US-04 + US-05 - Cursusinschrijving (addendum verplicht)
----------------------------------------------------------
-TC-10 (hoofdscenario)
-  Testcode: TC10_MetAddendum_InschrijvenLukt
-  Stappen: Sporter mét cursus-addendum schrijft in voor Yoga.
-  Testdata: Sporter #2 Bram Jansen (heeft addendum).
-  Verwacht resultaat: Inschrijving lukt.
-
-TC-11 (alternatief)
-  Testcode: TC11_ZonderAddendum_InschrijvenWordtGeweigerd
-  Stappen: Sporter zonder addendum probeert in te schrijven voor Yoga.
-  Testdata: Sporter #1 Anna de Vries (geen addendum).
-  Verwacht resultaat: Geweigerd met melding over ontbrekend addendum.
-
-TC-12 (alternatief)
-  Testcode: TC12_DubbeleInschrijving_WordtVoorkomen
-  Stappen: Sporter schrijft twee keer in voor dezelfde cursus.
-  Verwacht resultaat: Tweede poging geweigerd: "al ingeschreven".
-
-TC-13 (alternatief)
-  Testcode: TC13_VolleCursus_WordtGeweigerd
-  Stappen: Cursus met capaciteit 1 (Paaldansen) wordt volgeboekt; een
-           tweede sporter probeert alsnog in te schrijven.
-  Verwacht resultaat: Geweigerd met melding dat de cursus vol zit.
-
-TC-14 (alternatief)
-  Testcode: TC14_NietBestaandeCursus_GeeftFoutmelding
-  Stappen: Inschrijven voor een cursus die niet bestaat ("Kickboksen").
-  Verwacht resultaat: Foutmelding "bestaat niet".
-
-US-06 - Cursusinschrijving annuleren
---------------------------------------
-TC-15 (hoofdscenario)
-  Testcode: TC15_BestaandeInschrijving_KanGeannuleerdWorden
-  Stappen: Ingeschreven sporter annuleert de inschrijving.
-  Verwacht resultaat: Succes; sporter staat niet meer in de deelnemerslijst.
-
-TC-16 (alternatief)
-  Testcode: TC16_NietIngeschreven_AnnulerenGeeftFoutmelding
-  Stappen: Annuleren van een inschrijving die niet bestaat.
-  Verwacht resultaat: Foutmelding dat de sporter niet was ingeschreven.
-
-TC-17 (integratie)
-  Testcode: TC17_NaAnnuleren_KomtPlekVrijVoorAndereSporter
-  Stappen: Volle cursus -> annuleren -> andere sporter schrijft in.
-  Verwacht resultaat: De tweede sporter kan alsnog inschrijven.
-
-US-07 - Afspraak met personal coach
---------------------------------------
-TC-18 (hoofdscenario)
-  Testcode: TC18_BeschikbaarMoment_KanGeboektWorden
-  Stappen: Sporter boekt een vrij moment bij coach "Jan".
-  Verwacht resultaat: Afspraak bevestigd.
-
-TC-19 (alternatief)
-  Testcode: TC19_DubbeleBoeking_WordtVoorkomen
-  Stappen: Twee verschillende sporters proberen hetzelfde moment te boeken.
-  Verwacht resultaat: Tweede boeking geweigerd: "niet beschikbaar".
-
-TC-20 (alternatief)
-  Testcode: TC20_OnbekendeCoach_GeeftFoutmelding
-  Stappen: Boeken bij een coach die niet bestaat.
-  Verwacht resultaat: Foutmelding "bestaat niet".
-
-TC-21 (alternatief)
-  Testcode: TC21_NietBeschikbaarMoment_GeeftFoutmelding
-  Stappen: Boeken van een moment dat niet in de agenda van de coach staat.
-  Verwacht resultaat: Foutmelding "niet beschikbaar".
-
------------------------------------------------------------------
-ACCEPTATIETEST / USABILITY (handmatig, via de CLI)
------------------------------------------------------------------
-Uit te voeren door de applicatie te starten met `dotnet run` in de
-map SportschoolDeKast, en de menu-opties te doorlopen zonder verdere
-uitleg dan de teksten die de applicatie zelf toont.
-
-AT-01 Een medewerker kan zonder voorkennis via het menu een sporter
-      inchecken (optie 1) en begrijpt de melding bij weigering.
-AT-02 Een medewerker kan een abonnement annuleren (optie 2) inclusief
-      de bevestigingsvraag, zonder per ongeluk direct te annuleren.
-AT-03 Een medewerker kan een sporter inschrijven voor een cursus
-      (optie 3), waarbij eerst het cursusoverzicht (optie 7) zichtbaar
-      is zodat een geldige cursusnaam ingevuld kan worden.
-AT-04 Een medewerker kan een coach-afspraak inplannen (optie 5),
-      waarbij de beschikbare coaches en momenten eerst getoond worden.
-AT-05 Alle foutmeldingen (verkeerde invoer, onbekende sporter/cursus/
-      coach) zijn in begrijpelijk Nederlands en leggen uit waarom een
-      actie niet is gelukt.
-
-Resultaten van de acceptatietest staan in Testrapport.txt.
+  - Alle integratietests (TC) geslaagd.
+  - Alle acceptatiescenario's (AT) geslaagd, of bevindingen hersteld en
+    hertest.
+  - Resultaten en conclusies vastgelegd in Testrapport.txt.

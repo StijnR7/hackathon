@@ -1,115 +1,166 @@
 =================================================================
-TESTRAPPORT - SPORTSCHOOL "DE KAST" RECEPTIE CLI
+TESTRAPPORT - SPORTSCHOOL "DE KAST" SELFSERVICE CLI
 Fase 3 - Werkproces B1-K1-W4 "Test software"
 =================================================================
 
-UITGEVOERD OP: 2026-09-14
-UITGEVOERD DOOR: geautomatiseerde testsuite (xUnit) + handmatige
-                 acceptatietest via de CLI (`dotnet run`)
-OMGEVING: .NET SDK 10.0.400, Windows
+Uitgevoerd op:   28-09-2026
+Testbasis:       Testplan.txt (TC-01 t/m TC-35, AT-01 t/m AT-06)
+Omgeving:        .NET SDK 10.0.400, xUnit, Windows 11
+Versie:          Git master, 28-09-2026 (incl. herstel B-01)
 
------------------------------------------------------------------
-1. RESULTAAT INTEGRATIETESTS (AUTOMATISCH, xUnit)
------------------------------------------------------------------
-Uitgevoerd met: dotnet test (in map SportschoolDeKast.Tests)
+=================================================================
+1. SAMENVATTING
+=================================================================
+  Integratietests (automatisch):  35 / 35 geslaagd
+  Acceptatietests (handmatig):     6 / 6 geslaagd (na herstel van B-01)
+  Bevindingen:                     1 gevonden, 1 hersteld en hertest
+  Dekking acceptatiecriteria:      alle criteria van US-01 t/m US-08
 
-Testresultaat:
-  Total: 21   Passed: 21   Failed: 0   Skipped: 0   Duration: ~230 ms
+=================================================================
+2. RESULTATEN INTEGRATIETESTS
+=================================================================
+Commando: dotnet test (map SportschoolDeKast.Tests)
+Uitvoer:  Passed! - Failed: 0, Passed: 35, Skipped: 0, Total: 35
 
-| Testcode | User story | Scenario                                   | Resultaat |
-|----------|-----------|---------------------------------------------|-----------|
-| TC-01    | US-01     | 1x/week, eerste bezoek -> toegang            | GESLAAGD  |
-| TC-02    | US-01     | 1x/week, tweede bezoek -> geweigerd          | GESLAAGD  |
-| TC-03    | US-01     | Onbeperkt, 5x bezoek -> altijd toegang       | GESLAAGD  |
-| TC-04    | US-01     | Onbekende sporter -> geweigerd               | GESLAAGD  |
-| TC-05    | US-01     | Geannuleerd abonnement -> geen toegang       | GESLAAGD  |
-| TC-06    | US-01     | Toegangspogingen worden gelogd               | GESLAAGD  |
-| TC-07    | US-02     | Actief abonnement annuleren                  | GESLAAGD  |
-| TC-08    | US-02     | Dubbel annuleren -> foutmelding              | GESLAAGD  |
-| TC-09    | US-01/02  | Na annuleren vervalt toegang direct          | GESLAAGD  |
-| TC-10    | US-04/05  | Met addendum inschrijven -> lukt             | GESLAAGD  |
-| TC-11    | US-04     | Zonder addendum inschrijven -> geweigerd     | GESLAAGD  |
-| TC-12    | US-05     | Dubbele inschrijving -> voorkomen            | GESLAAGD  |
-| TC-13    | US-05     | Volle cursus -> geweigerd                    | GESLAAGD  |
-| TC-14    | US-05     | Niet-bestaande cursus -> foutmelding         | GESLAAGD  |
-| TC-15    | US-06     | Inschrijving annuleren -> plek vrij          | GESLAAGD  |
-| TC-16    | US-06     | Annuleren zonder inschrijving -> fout        | GESLAAGD  |
-| TC-17    | US-05/06  | Na annuleren plek beschikbaar voor ander     | GESLAAGD  |
-| TC-18    | US-07     | Beschikbaar moment boeken -> lukt            | GESLAAGD  |
-| TC-19    | US-07     | Dubbele boeking -> voorkomen                 | GESLAAGD  |
-| TC-20    | US-07     | Onbekende coach -> foutmelding               | GESLAAGD  |
-| TC-21    | US-07     | Niet-beschikbaar moment -> foutmelding       | GESLAAGD  |
+ ID    Story    Scenario                                        Resultaat
+ ----- -------- ----------------------------------------------- ---------
+ TC-01 US-01    1x/week, eerste bezoek -> toegang                Geslaagd
+ TC-02 US-01    1x/week, tweede bezoek -> geweigerd              Geslaagd
+ TC-03 US-01    2x/week, derde bezoek -> geweigerd               Geslaagd
+ TC-04 US-01    Onbeperkt, 10 bezoeken -> altijd toegang         Geslaagd
+ TC-05 US-01    Nieuwe week -> weeklimiet gereset                Geslaagd
+ TC-06 US-01    Onbekende sporter -> geweigerd                   Geslaagd
+ TC-07 US-01    Alle toegangspogingen gelogd                     Geslaagd
+ TC-08 US-02    Opzeggen -> einddatum +1 maand, bevestiging      Geslaagd
+ TC-09 US-02    Dubbel opzeggen -> melding                       Geslaagd
+ TC-10 US-02    Binnen opzegtermijn -> nog toegang               Geslaagd
+ TC-11 US-02    Na einddatum -> geen toegang                     Geslaagd
+ TC-12 US-03    Zoeken op deel van de naam                       Geslaagd
+ TC-13 US-03    Zoeken op ID + status                            Geslaagd
+ TC-14 US-03    Zoeken zonder resultaat                          Geslaagd
+ TC-15 US-03    Wijzigen -> uitgevoerd + gelogd                  Geslaagd
+ TC-16 US-03    Wijzigen zonder verandering -> niet gelogd       Geslaagd
+ TC-17 US-03    Opzegging door medewerker herleidbaar            Geslaagd
+ TC-18 US-05    Met addendum inschrijven                         Geslaagd
+ TC-19 US-04    Zonder addendum -> geweigerd                     Geslaagd
+ TC-20 US-05    Dubbele inschrijving voorkomen                   Geslaagd
+ TC-21 US-05    Volle cursus -> geweigerd                        Geslaagd
+ TC-22 US-05    Onbekende cursus -> melding                      Geslaagd
+ TC-23 US-03/04 Addendum toegevoegd -> inschrijven lukt          Geslaagd
+ TC-24 US-06    Annuleren -> plek vrij + bevestiging             Geslaagd
+ TC-25 US-06    Annuleren zonder inschrijving -> melding         Geslaagd
+ TC-26 US-06    Vrijgekomen plek bruikbaar voor ander            Geslaagd
+ TC-27 US-07    Vrij moment boeken                               Geslaagd
+ TC-28 US-07    Dubbele boeking voorkomen                        Geslaagd
+ TC-29 US-07    Onbekende coach -> melding                       Geslaagd
+ TC-30 US-07    Niet-beschikbaar moment -> melding               Geslaagd
+ TC-31 US-08    Medewerker juiste pincode -> ingelogd            Geslaagd
+ TC-32 US-08    Foute pincode / leeg / onbekend ID -> geweigerd  Geslaagd
+ TC-33 US-08    Pincode alleen als hash opgeslagen               Geslaagd
+ TC-34 US-08    Toegangslog zonder namen                         Geslaagd
+ TC-35 US-04    Inschrijfrecht vooraf controleerbaar (B-01)      Geslaagd
 
-Conclusie deel 1:
-Alle 21 testgevallen zijn geslaagd. Elke user story uit de gekozen
-kernflows (US-01, US-02, US-04, US-05, US-06, US-07) heeft zowel een
-geslaagd hoofdscenario als minimaal één correct afgehandeld
-alternatief/negatief scenario. Er zijn geen functionele afwijkingen
-gevonden ten opzichte van de acceptatiecriteria uit de user stories.
+=================================================================
+3. RESULTATEN ACCEPTATIETESTS (INCL. USABILITY)
+=================================================================
+AT-01 Inchecken - GESLAAGD
+  Waargenomen: "Anna de Vries: toegang verleend. Welkom!", daarna
+  "Anna de Vries: weeklimiet (1x) al bereikt. Toegang geweigerd."
+  Usability: de reden van de weigering is direct duidelijk.
 
------------------------------------------------------------------
-2. RESULTAAT ACCEPTATIETEST / USABILITY (HANDMATIG)
------------------------------------------------------------------
-Uitgevoerd door de CLI te starten (`dotnet run`) en de menu-opties te
-doorlopen zoals een medewerker dat zou doen, zonder aanvullende uitleg
-buiten de teksten die de applicatie zelf toont.
+AT-02 Opzeggen met bevestiging - GESLAAGD
+  Waargenomen: bij "nee" verscheen "Opzegging afgebroken." en bleef de
+  status "Actief". Bij "ja": "Bevestiging: abonnement van Anna de Vries
+  is opgezegd. Toegang blijft geldig tot 28-10-2026." De status toonde
+  daarna "Opgezegd, actief tot 28-10-2026". Nogmaals opzeggen gaf
+  "... heeft het abonnement al opgezegd (einddatum 28-10-2026)."
+  Usability: de sporter weet precies tot wanneer hij/zij nog kan sporten.
 
-AT-01 Inchecken van een sporter (optie 1)
-  Waargenomen: sporter #1 (Anna, 1x/week) kreeg bij het eerste bezoek
-  de melding "toegang verleend. Welkom!"; bij een tweede poging
-  dezelfde sessie de melding "weeklimiet (1x) al bereikt. Toegang
-  geweigerd." Beide meldingen zijn duidelijk en direct te begrijpen.
-  Resultaat: GESLAAGD
+AT-03 Cursus inschrijven en annuleren - GESLAAGD na herstel B-01
+  Eerste uitvoering: bevinding B-01 (zie hoofdstuk 4).
+  Hertest: Dirk krijgt direct "Dirk Smit heeft geen cursus-addendum.
+  Inschrijven is niet mogelijk. Vraag een medewerker om een addendum toe
+  te voegen." Bij Bram: het overzicht met bezetting wordt getoond, "nee"
+  geeft "Inschrijving afgebroken.", "ja" geeft "Bevestiging: Bram Jansen
+  is ingeschreven voor Yoga (Maandag 18:00)." en de bezetting gaat naar
+  1/2. Een tweede keer geeft "Bram Jansen is al ingeschreven voor Yoga."
+  Bij annuleren ziet Bram alleen zijn eigen inschrijvingen; daarna:
+  "Bevestiging: inschrijving voor Yoga geannuleerd. De plek is weer vrij."
 
-AT-02 Abonnement annuleren met bevestiging (optie 2)
-  Waargenomen: de applicatie vraagt expliciet "Weet je zeker dat je
-  het abonnement van Anna de Vries wilt annuleren? (ja/nee)" voordat
-  er iets wijzigt. Na bevestiging verscheen "Abonnement van Anna de
-  Vries is geannuleerd." Een vervolgpoging tot inchecken werd terecht
-  geweigerd ("abonnement is opgezegd/niet actief").
-  Resultaat: GESLAAGD
+AT-04 Coach-afspraak - GESLAAGD
+  Waargenomen: "Coach 'Sanne' bestaat niet." bij een onbekende coach.
+  Invoer in kleine letters ("jan", "dinsdag 10:00") werkt:
+  "Afspraak bevestigd: Bram Jansen met Jan op Dinsdag 10:00." Bij
+  Chantal stond di 10:00 niet meer in de lijst en gaf een poging
+  "Moment 'Dinsdag 10:00' is niet beschikbaar bij Jan."
+  Usability: omdat de invoer hoofdletterongevoelig is, is de eerdere
+  klacht ("coach bestaat niet" door verschil in schrijfwijze) opgelost.
 
-AT-03 Inschrijven voor een cursus (optie 3), inclusief cursusoverzicht
-  Waargenomen: het cursusoverzicht (bezetting per cursus) wordt
-  automatisch getoond vlak voordat om een cursusnaam wordt gevraagd,
-  zodat een medewerker geen aparte stap hoeft te nemen om geldige
-  cursusnamen op te zoeken. Inschrijving van Bram Jansen (met
-  addendum) voor Yoga lukte; een tweede poging voor dezelfde cursus
-  gaf terecht "is al ingeschreven voor Yoga."
-  Resultaat: GESLAAGD
+AT-05 Foutafhandeling - GESLAAGD
+  Waargenomen: "abc" als ID gaf "Ongeldige invoer, voer een geheel getal
+  in (0 of hoger)." en een nieuwe vraag; menukeuze 9 gaf "Ongeldige
+  keuze, probeer opnieuw."; een ongeldig abonnementstype gaf "Ongeldige
+  keuze, er is niets gewijzigd." Geen enkele invoer liet de applicatie
+  crashen.
 
-AT-04 Coach-afspraak inplannen (optie 5)
-  Waargenomen: beschikbare coaches en hun vrije momenten worden eerst
-  getoond. Na het boeken van "Dinsdag 10:00" bij Jan verdween dat
-  moment direct uit het overzicht bij een volgende boekingspoging, en
-  een nieuwe poging op hetzelfde moment gaf terecht "niet beschikbaar
-  bij Jan."
-  Resultaat: GESLAAGD
+AT-06 Rolscheiding en beheer - GESLAAGD
+  Waargenomen: pincode 0000 gaf "Inloggen mislukt: ID of pincode
+  onjuist." (verraadt niet wat er fout is). Met 1234 ingelogd: zoeken op
+  "de" vond Anna de Vries, "xyz" gaf "Geen sporters gevonden."; het
+  wijzigen van sporter 1 en het opzeggen voor sporter 2 werkten. De
+  wijzigingslog toonde drie regels met "Medewerker #1", het sporter-ID en
+  de oude/nieuwe waarde. Het sportermenu bevat geen beheeropties.
 
-AT-05 Duidelijkheid van foutmeldingen
-  Waargenomen: alle geweigerde acties (onbekende sporter, ontbrekend
-  addendum, volle cursus, dubbele boeking, niet-bestaande coach) geven
-  een melding in begrijpelijk Nederlands die de reden van weigering
-  benoemt. Geen van de meldingen bevat technisch jargon of foutcodes.
-  Resultaat: GESLAAGD
+=================================================================
+4. BEVINDINGEN
+=================================================================
+B-01  Usability, ernst: laag/middel
+  Scenario:  AT-03, sporter #4 (geen cursus-addendum) kiest "Inschrijven".
+  Verwacht:  directe melding dat inschrijven niet mogelijk is.
+  Werkelijk: het systeem toonde eerst alle cursussen, vroeg om een naam
+             en om bevestiging, en meldde pas daarna dat de sporter geen
+             addendum had. Dat kost onnodige handelingen en is
+             frustrerend.
+  Oorzaak:   de addendumcontrole zat alleen in SchrijfInVoorCursus, die
+             pas na de bevestiging werd aangeroepen.
+  Herstel:   nieuwe methode Sportschool.MagCursussenVolgen(), die de CLI
+             als eerste aanroept. SchrijfInVoorCursus gebruikt dezelfde
+             methode, zodat de regel op één plek blijft. De melding
+             vertelt nu ook wat de sporter kan doen (addendum aanvragen).
+             Activiteitendiagram cursusinschrijving aangepast.
+  Hertest:   TC-35 toegevoegd (geslaagd), AT-03 opnieuw uitgevoerd
+             (geslaagd). Alle 35 integratietests opnieuw geslaagd, dus
+             geen regressie.
+  Status:    Opgelost.
 
-Conclusie deel 2:
-De applicatie is voor een medewerker zonder training te bedienen: elk
-menu-item toont waar nodig eerst relevante context (bijv. het
-cursus- of coachoverzicht) voordat om invoer wordt gevraagd, en elke
-weigering wordt met een begrijpelijke reden toegelicht.
+=================================================================
+5. CONCLUSIES
+=================================================================
+1. Functioneel: alle acceptatiecriteria van US-01 t/m US-08 zijn
+   aangetoond met minimaal één hoofd- en één alternatief scenario. De
+   MVP voldoet daarmee voor 100% aan de afgesproken basis
+   (1_FunctioneelOntwerp.txt, hoofdstuk 5).
 
------------------------------------------------------------------
-3. EINDCONCLUSIE
------------------------------------------------------------------
-Zowel de geautomatiseerde integratietests (21/21 geslaagd) als de
-handmatige acceptatie-/usabilitytest (5/5 scenario's geslaagd) tonen
-aan dat de MVP voldoet aan de acceptatiecriteria van de gekozen
-kernflows (US-01, US-02, US-04, US-05, US-06, US-07). Er zijn tijdens
-dit testtraject geen functionele fouten gevonden die (nog) opgelost
-moeten worden.
+2. Samenhang: de integratiescenario's (TC-10, TC-11, TC-23, TC-26) laten
+   zien dat de onderdelen goed samenwerken. Een opzegging beïnvloedt de
+   toegang pas na de opzegtermijn, en een addendum dat een medewerker
+   toevoegt geeft direct toegang tot cursussen.
 
-Aandachtspunt voor een volgende iteratie (buiten scope van dit
-prototype, zie ook DOCUMENTATIE.txt): er is geen automatische
-weekreset van de bezoekteller. Dit is bewust niet getest als "fout"
-omdat het een bekende, geaccepteerde beperking van dit prototype is.
+3. Gebruik: de acceptatietest laat zien dat sporters en medewerkers de
+   flows zonder uitleg kunnen doorlopen. Elke weigering noemt de reden,
+   onomkeerbare acties vragen bevestiging, en de invoer is vergevingsgezind
+   (hoofdletters, ongeldige tekst). De enige usabilitybevinding (B-01) is
+   opgelost.
+
+4. Privacy en security: er worden alleen noodzakelijke gegevens getoond
+   en opgeslagen (log zonder namen, pincode als hash), en beheerfuncties
+   zijn afgeschermd. De bekende beperkingen (inloggen met alleen het
+   sporter-ID, hash zonder salt) zijn bewuste keuzes voor het prototype
+   en staan met een oplossing voor productie in
+   Ontwerp/2_TechnischOntwerp.txt, hoofdstuk 6.
+
+5. Aanbevelingen voor een volgende iteratie:
+   - inloggen met een NFC-pas in plaats van een getypt ID;
+   - PBKDF2/bcrypt met salt en een blokkade na 3 foute pincodes;
+   - opslag in een database volgens Ontwerp/datamodel.dbml;
+   - een coach-afspraak kunnen annuleren.

@@ -1,148 +1,188 @@
 =================================================================
-SPORTSCHOOL "DE KAST" - RECEPTIE CLI (C# / .NET)
-DOCUMENTATIE
+SPORTSCHOOL "DE KAST" - SELFSERVICE CLI (C# / .NET)
+SYSTEEM- EN GEBRUIKERSDOCUMENTATIE
 =================================================================
 
-WAT IS DIT?
------------
-Een console-applicatie (CLI, geen grafische interface) die de
-belangrijkste handmatige receptietaken van sportschool "De Kast"
-simuleert, zodat medewerkers deze zelf kunnen afhandelen:
+INHOUD
+  A. Wat is dit?
+  B. Installatie en starten             (systeemdocumentatie)
+  C. Projectstructuur en architectuur  (systeemdocumentatie)
+  D. Tests uitvoeren                    (systeemdocumentatie)
+  E. Handleiding sporter                (gebruikersdocumentatie)
+  F. Handleiding medewerker             (gebruikersdocumentatie)
+  G. Dummydata
+  H. Bekende beperkingen
 
-  - Sporters toegang verlenen op basis van hun abonnementstype
-  - Abonnementen annuleren
-  - Sporters inschrijven voor cursussen (yoga, pilates, paaldansen)
-  - Cursusinschrijvingen annuleren
-  - Afspraken inplannen met een personal coach
+=================================================================
+A. WAT IS DIT?
+=================================================================
+Een console-applicatie die de handmatige receptietaken van sportschool
+De Kast automatiseert. Sporters regelen zelf:
+  - inchecken (toegang op basis van abonnementstype);
+  - inschrijven voor cursussen (yoga, pilates, paaldansen) en annuleren;
+  - afspraken met een personal coach;
+  - hun abonnement opzeggen.
+Medewerkers kunnen abonnementen zoeken, inzien en wijzigen, en de logs
+bekijken.
 
-Er is GEEN database gebruikt: alle data staat in het geheugen en
-wordt bij het opstarten gevuld met dummydata (4 sporters, 3
-cursussen, 2 coaches). Zodra je het programma afsluit, is de data
-weg. Dat is bewust simpel gehouden voor dit prototype.
+Alle data staat in het geheugen en wordt bij het opstarten gevuld met
+dummydata. Na afsluiten is alles weer zoals bij de start.
 
--------------------------------------------------------------
-PROJECTSTRUCTUUR
--------------------------------------------------------------
-SportschoolDeKast/
-  Program.cs                  -> De CLI: menu, invoer, output
+=================================================================
+B. INSTALLATIE EN STARTEN
+=================================================================
+Vereisten:
+  - .NET SDK 10 of hoger (https://dotnet.microsoft.com/download)
+  - Git (om de repository te clonen)
+  - Optioneel: Visual Studio Code met de extensie "C# Dev Kit"
+
+Stappen:
+  1. Clone de repository:
+       git clone https://github.com/StijnR7/hackathon.git
+  2. Ga naar de projectmap:
+       cd hackathon
+  3. Start de applicatie:
+       dotnet run --project SportschoolDeKast.csproj
+
+In VS Code: open de map, open een terminal (Ctrl+`) en voer stap 3 uit.
+
+=================================================================
+C. PROJECTSTRUCTUUR EN ARCHITECTUUR
+=================================================================
+  Program.cs                   Presentatielaag: menu's, invoer, meldingen
+  Services/Sportschool.cs      Servicelaag: alle bedrijfsregels en logging
   Models/
-    AbonnementType.cs          -> Enum: EenKeerPerWeek, TweeKeerPerWeek, Onbeperkt
-    Sporter.cs                  -> Een lid van de sportschool
-    Cursus.cs                   -> Een cursusmoment (naam, tijd, capaciteit)
-    Coach.cs                    -> Een personal coach met agenda
-  Services/
-    Sportschool.cs               -> Alle bedrijfsregels/logica (los van de CLI)
-  SportschoolDeKast.csproj       -> Project-/build-configuratie (.NET)
+    AbonnementType.cs          Enum: EenKeerPerWeek, TweeKeerPerWeek, Onbeperkt
+    Sporter.cs                 Lid met abonnement, einddatum, bezoeken
+    Cursus.cs                  Cursus met moment, capaciteit, deelnemers
+    Coach.cs                   Coach met beschikbare/geboekte momenten
+    Medewerker.cs              Medewerker met gehashte pincode
+  SportschoolDeKast.Tests/     xUnit-testproject (35 tests)
+  Ontwerp/                     Functioneel + technisch ontwerp, diagrammen
+  Testplan.txt, Testrapport.txt  Fase 3
+  Videoscript.txt              Script voor de uitlegvideo
+  OPLEVERING.txt               Overzicht van alle bewijsstukken
 
-De scheiding is bewust:
-  - Models    = pure data, geen logica.
-  - Services  = business rules (validatie, regels, beslissingen).
-  - Program   = alleen invoer vragen, resultaten tonen (geen logica).
-Dit maakt de code overzichtelijk en later makkelijker uit te
-breiden of te testen, zonder dat de CLI-laag alle regels hoeft te
-kennen.
+Architectuur: drie lagen. Program bevat geen bedrijfsregels; die staan
+allemaal in Sportschool. Iedere servicemethode geeft (Succes, Melding)
+terug, en Program toont alleen de melding. Zie
+Ontwerp/2_TechnischOntwerp.txt en Ontwerp/klassendiagram.puml.
 
--------------------------------------------------------------
-HOE STARTEN
--------------------------------------------------------------
-Vereist: .NET SDK (getest met .NET 10).
+Belangrijke regels (Services/Sportschool.cs):
+  VerleenToegang        weeklimiet per abonnementstype, per ISO-week;
+                        na de einddatum geen toegang; elke poging gelogd
+  AnnuleerAbonnement    einddatum = vandaag + 1 maand (opzegtermijn)
+  WijzigAbonnement      alleen voor medewerkers, gelogd in WijzigingsLog
+  SchrijfInVoorCursus   actief abonnement + addendum vereist, geen dubbele
+                        inschrijving, niet boven de capaciteit
+  PlanAfspraakMetCoach  geboekt moment verdwijnt uit beschikbare momenten
+  LogInMedewerker       vergelijkt de SHA-256-hash van de pincode
 
-1. Open een terminal in de map "SportschoolDeKast" (waar het
-   .csproj-bestand staat).
-2. Voer uit:
-       dotnet run
-3. Het menu verschijnt in de terminal.
+Code conventions: Microsoft C# conventions (PascalCase voor klassen,
+methoden en properties, _camelCase voor private velden, camelCase voor
+lokale variabelen), Nederlandse domeinnamen die aansluiten op de casus,
+en commentaar alleen waar het "waarom" niet uit de code blijkt.
 
-In VS Code:
-  - Open de map "SportschoolDeKast" in VS Code.
-  - Installeer (indien nodig) de C# Dev Kit / C# extensie.
-  - Open Program.cs en start via de ingebouwde "Run"-knop, of
-    gebruik de terminal in VS Code met `dotnet run`.
+=================================================================
+D. TESTS UITVOEREN
+=================================================================
+  cd SportschoolDeKast.Tests
+  dotnet test
 
--------------------------------------------------------------
-MENU-OPTIES
--------------------------------------------------------------
-1. Toegang verlenen (sporter inchecken)
-   Vraagt een sporter-ID en controleert of deze sporter naar
-   binnen mag, gebaseerd op het abonnementstype:
-     - "EenKeerPerWeek"  -> max. 1 bezoek per week
-     - "TweeKeerPerWeek" -> max. 2 bezoeken per week
-     - "Onbeperkt"       -> geen limiet
-   Een opgezegd (niet-actief) abonnement geeft altijd een
-   weigering. Elke poging (toegestaan of geweigerd) wordt
-   vastgelegd in de toegangslog (optie 8).
+Verwacht resultaat: 35 geslaagd, 0 mislukt. Zie Testplan.txt en
+Testrapport.txt.
 
-2. Abonnement annuleren
-   Vraagt een sporter-ID, toont een bevestigingsvraag (ja/nee)
-   en zet het abonnement pas na bevestiging op inactief. Vanaf
-   dat moment krijgt de sporter geen toegang meer (optie 1).
+=================================================================
+E. HANDLEIDING SPORTER
+=================================================================
+1. Kies in het hoofdmenu 1 ("Inloggen als sporter").
+2. Voer je sporter-ID in (staat op je pas).
+3. Kies in het sportermenu wat je wilt doen:
 
-3. Inschrijven voor een cursus
-   Vraagt een sporter-ID en een cursusnaam. Voorwaarden:
-     - De sporter moet een cursus-addendum hebben.
-     - De sporter mag niet al ingeschreven zijn voor dezelfde
-       cursus (voorkomt dubbele inschrijving).
-     - De cursus mag niet vol zitten (capaciteitscheck).
+   1  Inchecken
+      Je krijgt toegang als je abonnement dat toelaat:
+        1x per week  -> 1 bezoek per week (maandag t/m zondag)
+        2x per week  -> 2 bezoeken per week
+        Onbeperkt    -> geen limiet
+      Wordt je toegang geweigerd, dan staat de reden in de melding.
 
-4. Cursusinschrijving annuleren
-   Vraagt een sporter-ID en cursusnaam, en maakt de plek weer
-   vrij als de sporter daadwerkelijk stond ingeschreven.
+   2  Mijn abonnement bekijken
+      Je ziet je abonnementstype, status (actief/opgezegd), of je een
+      cursus-addendum hebt en hoeveel bezoeken je deze week hebt gehad.
 
-5. Afspraak inplannen met personal coach
-   Toont eerst de beschikbare coaches met hun vrije momenten.
-   Na het kiezen van coach + moment wordt de afspraak geboekt en
-   verdwijnt dat moment uit de beschikbare tijden, zodat het niet
-   dubbel geboekt kan worden.
+   3  Inschrijven voor een cursus
+      Je hebt hiervoor een cursus-addendum nodig. Je ziet eerst alle
+      cursussen met tijd en bezetting. Typ de naam van de cursus en
+      bevestig met "ja".
 
-6. Overzicht sporters
-   Toont alle sporters met hun abonnement, status, addendum en
-   aantal bezoeken deze week.
+   4  Cursusinschrijving annuleren
+      Je ziet je inschrijvingen. Typ de naam van de cursus die je wilt
+      annuleren. Je plek komt dan vrij voor iemand anders.
 
-7. Overzicht cursussen
-   Toont per cursus hoeveel plekken bezet zijn.
+   5  Afspraak met personal coach
+      Je ziet de vrije momenten per coach. Typ de naam van de coach en
+      het moment precies zoals getoond (hoofdletters maken niet uit).
 
-8. Toegangslog bekijken
-   Toont alle toegangspogingen (tijdstip, sporter, resultaat),
-   zowel geslaagd als geweigerd.
+   6  Abonnement opzeggen
+      Bevestig met "ja". Er geldt een opzegtermijn van 1 maand: tot de
+      getoonde einddatum kun je nog gewoon sporten.
 
-0. Afsluiten
+   0  Uitloggen
 
--------------------------------------------------------------
-DUMMYDATA (SEED) BIJ OPSTARTEN
--------------------------------------------------------------
+=================================================================
+F. HANDLEIDING MEDEWERKER
+=================================================================
+1. Kies in het hoofdmenu 2 ("Inloggen als medewerker").
+2. Voer je medewerker-ID en pincode in.
+   Demo-account: ID 1, pincode 1234.
+3. Kies in het medewerkermenu:
+
+   1  Sporter zoeken en status inzien
+      Zoek op (een deel van) de naam of op het exacte ID.
+
+   2  Abonnement wijzigen
+      Voer het sporter-ID in, kies het nieuwe type (1/2/3) en geef aan of
+      de sporter een cursus-addendum heeft. De wijziging wordt gelogd met
+      jouw medewerker-ID.
+
+   3  Abonnement opzeggen namens sporter
+      Zelfde regels als bij de sporter (bevestiging, opzegtermijn), maar
+      in de log staat dat jij het hebt gedaan.
+
+   4  Overzicht cursussen        bezetting per cursus
+   5  Toegangslog bekijken       alle toegangspogingen (alleen ID's)
+   6  Wijzigingslog bekijken     wie wat wanneer heeft gewijzigd
+   0  Uitloggen
+
+=================================================================
+G. DUMMYDATA
+=================================================================
 Sporters:
-  #1 Anna de Vries   - EenKeerPerWeek   - geen addendum
-  #2 Bram Jansen     - TweeKeerPerWeek  - heeft addendum
-  #3 Chantal Bakker  - Onbeperkt        - heeft addendum
-  #4 Dirk Smit       - EenKeerPerWeek   - geen addendum
+  #1 Anna de Vries   - 1x per week  - geen addendum
+  #2 Bram Jansen     - 2x per week  - addendum
+  #3 Chantal Bakker  - Onbeperkt    - addendum
+  #4 Dirk Smit       - 1x per week  - geen addendum
 
 Cursussen:
-  Yoga        - Maandag 18:00   - max. 2 deelnemers
-  Pilates     - Woensdag 19:00  - max. 2 deelnemers
-  Paaldansen  - Vrijdag 20:00   - max. 1 deelnemer
+  Yoga        Maandag 18:00   max. 2
+  Pilates     Woensdag 19:00  max. 2
+  Paaldansen  Vrijdag 20:00   max. 1
 
 Coaches:
-  Jan   - Dinsdag 10:00, Dinsdag 11:00, Donderdag 09:00
-  Erik  - Maandag 08:00, Woensdag 17:00
+  Jan   Dinsdag 10:00, Dinsdag 11:00, Donderdag 09:00
+  Erik  Maandag 08:00, Woensdag 17:00
 
-Voorbeeld om te testen:
-  - Log sporter #1 (Anna) twee keer in via optie 1: de eerste
-    keer wordt toegang verleend, de tweede keer geweigerd
-    (weeklimiet van 1 bereikt).
-  - Probeer sporter #4 (Dirk, geen addendum) in te schrijven
-    voor Yoga via optie 3: dit wordt geweigerd.
-  - Probeer sporter #2 (Bram, wel addendum) in te schrijven voor
-    Yoga: dit lukt.
+Medewerker:
+  #1 Receptie De Kast, pincode 1234 (demowaarde, opgeslagen als hash)
 
--------------------------------------------------------------
-BEKENDE BEPERKINGEN (BEWUST, BUITEN SCOPE VAN DIT PROTOTYPE)
--------------------------------------------------------------
-  - Geen database/opslag: data reset bij elke herstart.
-  - Geen automatische weekreset van bezoekaantallen (in een
-    volgende iteratie zou dit bijv. via een geplande taak of
-    datumvergelijking kunnen).
-  - Geen onderscheid in rollen/rechten tussen "sporter" en
-    "medewerker" binnen de CLI zelf (dit is een intern
-    receptie-hulpmiddel, niet de sporter-facing app).
-  - Geen wachtwoorden/authenticatie: dit is een lokaal
-    hulpmiddel voor receptiepersoneel, geen publiek systeem.
+=================================================================
+H. BEKENDE BEPERKINGEN (BEWUST BUITEN SCOPE)
+=================================================================
+  - Geen database: data reset bij herstart (het datamodel voor een
+    database staat in Ontwerp/datamodel.dbml).
+  - Sporters loggen in met alleen hun ID; in productie gebeurt dat met
+    een NFC-pas.
+  - Pincode-hash zonder salt en zonder blokkade na foute pogingen; in
+    productie PBKDF2/bcrypt en een lockout.
+  - Coach-afspraken annuleren en het beheer van cursussen en coaches
+    zitten niet in deze MVP.

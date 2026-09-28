@@ -1,0 +1,65 @@
+=================================================================
+VIDEOSCRIPT - UITLEGVIDEO SPORTSCHOOL "DE KAST" (ca. 5 minuten)
+Fase 3 - bewijslast "Video waarin het product wordt uitgelegd"
+=================================================================
+Tip: zet de terminal op een groot lettertype en start de app vooraf
+één keer (`dotnet run --project SportschoolDeKast.csproj`), zodat de
+eerste build niet in beeld komt.
+
+-----------------------------------------------------------------
+0:00 - 0:30  INTRODUCTIE
+-----------------------------------------------------------------
+Beeld: Ontwerp/1_FunctioneelOntwerp.txt, hoofdstuk 1.
+Zeg:  "De Kast heeft te weinig personeel. Daarom heb ik een selfservice-
+       applicatie gemaakt waarmee sporters zelf inchecken, zich inschrijven
+       voor cursussen, een coach boeken en opzeggen. Medewerkers kunnen
+       abonnementen beheren."
+
+-----------------------------------------------------------------
+0:30 - 1:30  ONTWERP
+-----------------------------------------------------------------
+Beeld: usecasediagram.png -> activiteitendiagram_toegang.png ->
+       ERD op dbdiagram.io -> klassendiagram.png.
+Zeg:  - "Er zijn twee actoren: sporter en medewerker."
+      - "Het kernproces is toegang: eerst controleer ik of de sporter
+         bestaat, dan of het abonnement actief is, dan de weeklimiet."
+      - "In het ERD staat hoe de data in een echte database komt, met
+         unieke sleutels tegen dubbele inschrijvingen en boekingen."
+      - "De code heeft drie lagen: de CLI, de servicelaag met alle regels,
+         en de modellen."
+
+-----------------------------------------------------------------
+1:30 - 3:30  DEMO
+-----------------------------------------------------------------
+Sporter 1 (Anna, 1x per week):
+  - Inchecken -> welkom. Nog een keer -> weeklimiet bereikt.
+Sporter 4 (Dirk, geen addendum):
+  - Inschrijven -> meteen de melding dat een addendum nodig is.
+Sporter 2 (Bram, addendum):
+  - Inschrijven voor Yoga -> overzicht -> bevestigen -> ingeschreven.
+  - Coach Jan, dinsdag 10:00 -> bevestigd.
+  - Opzeggen -> ja -> "toegang blijft geldig tot ..." (opzegtermijn).
+Medewerker (ID 1, pincode 1234):
+  - Eerst een foute pincode laten zien -> geweigerd.
+  - Zoeken op "smit" -> Dirk wijzigen naar onbeperkt + addendum.
+  - Wijzigingslog en toegangslog tonen: wie, wat, wanneer; geen namen in
+    de toegangslog.
+
+-----------------------------------------------------------------
+3:30 - 4:30  TESTEN
+-----------------------------------------------------------------
+Beeld: `dotnet test` in SportschoolDeKast.Tests -> 35 geslaagd.
+       Daarna Testrapport.txt, hoofdstuk 4 (bevinding B-01).
+Zeg:  "Voor elke user story heb ik een hoofd- en een alternatief scenario
+       getest. Bij de acceptatietest vond ik dat een sporter zonder
+       addendum eerst de hele cursuslijst kreeg. Dat heb ik aangepast en
+       opnieuw getest."
+
+-----------------------------------------------------------------
+4:30 - 5:00  PRIVACY, SECURITY EN AFSLUITING
+-----------------------------------------------------------------
+Zeg:  - "Ik sla alleen op wat nodig is, de pincode alleen als hash, en de
+         log bevat geen namen."
+      - "Voor productie raad ik NFC-passen, een database en een sterkere
+         pincode-beveiliging aan; dat staat in het technisch ontwerp."
+      - "Bedankt voor het kijken."
