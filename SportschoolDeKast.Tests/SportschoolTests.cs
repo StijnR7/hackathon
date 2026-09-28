@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using SportschoolDeKast.Models;
 using SportschoolDeKast.Services;
 using Xunit;
@@ -5,27 +7,24 @@ using Xunit;
 namespace SportschoolDeKast.Tests
 {
     // ====================================================================
-    // TESTPLAN UITVOERING - FASE 3 (WERKPROCES B1-K1-W4 "TEST SOFTWARE")
+    // INTEGRATIETESTS - FASE 3 (WERKPROCES B1-K1-W4 "TEST SOFTWARE")
     // ====================================================================
-    // Elke test hieronder komt overeen met een scenario uit Testplan.txt.
-    // Per user story is er minimaal:
-    //   - 1 hoofdscenario (happy path)
-    //   - 1 alternatief/negatief scenario
-    // zoals gevraagd in de leeswijzer voor Fase 3.
-    //
-    // Testtype: unit-/integratietests op de service-laag (Sportschool.cs),
-    // omdat daar alle bedrijfsregels/acceptatiecriteria worden afgehandeld.
-    // Elke test bouwt zijn eigen Sportschool-object op (geen gedeelde state
-    // tussen tests), zodat tests onafhankelijk en herhaalbaar zijn.
+    // Elke test komt overeen met een testgeval (TC-xx) uit Testplan.txt.
+    // Per user story is er minimaal één hoofdscenario en één
+    // alternatief scenario. Elke test bouwt een eigen Sportschool op met een
+    // vaste klok, zodat de tests onafhankelijk en herhaalbaar zijn.
     // ====================================================================
 
     public class SportschoolTests
     {
-        // Helper: bouwt een Sportschool met dezelfde soort dummydata als
-        // Program.cs, zodat de testcondities overeenkomen met de praktijk.
-        private static Sportschool MaakTestSportschool()
+        // Maandag 28 september 2026, 10:00.
+        private static readonly DateTime Maandag = new DateTime(2026, 9, 28, 10, 0, 0);
+
+        private static Sportschool MaakTestSportschool(DateTime? nu = null)
         {
             var sportschool = new Sportschool();
+            var tijd = nu ?? Maandag;
+            sportschool.Klok = () => tijd;
 
             sportschool.Sporters.Add(new Sporter(1, "Anna de Vries", AbonnementType.EenKeerPerWeek));
             sportschool.Sporters.Add(new Sporter(2, "Bram Jansen", AbonnementType.TweeKeerPerWeek, heeftCursusAddendum: true));
@@ -39,272 +38,449 @@ namespace SportschoolDeKast.Tests
             sportschool.Coaches.Add(new Coach("Jan", new[] { "Dinsdag 10:00", "Dinsdag 11:00", "Donderdag 09:00" }));
             sportschool.Coaches.Add(new Coach("Erik", new[] { "Maandag 08:00", "Woensdag 17:00" }));
 
+            sportschool.Medewerkers.Add(new Medewerker(1, "Receptie De Kast", Sportschool.HashPincode("1234")));
+
             return sportschool;
         }
+
+        private static Medewerker Receptie(Sportschool s) => s.Medewerkers[0];
 
         // ----------------------------------------------------------------
         // US-01: Toegang op basis van abonnementstype
         // ----------------------------------------------------------------
 
-        [Fact] // TC-01: Hoofdscenario - sporter met "1x per week" mag 1x naar binnen
+        [Fact] // TC-01: hoofdscenario
         public void TC01_EenKeerPerWeek_EersteBezoek_GeeftToegang()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (toegestaan, melding) = sportschool.VerleenToegang(1); // Anna, EenKeerPerWeek
+            var (toegestaan, melding) = s.VerleenToegang(1);
 
             Assert.True(toegestaan);
-            Assert.Contains("toegang verleend", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("toegang verleend", melding, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact] // TC-02: Alternatief scenario - tweede bezoek in dezelfde week wordt geweigerd
+        [Fact] // TC-02: alternatief
         public void TC02_EenKeerPerWeek_TweedeBezoekZelfdeWeek_WordtGeweigerd()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.VerleenToegang(1); // eerste (toegestane) bezoek
+            var s = MaakTestSportschool();
+            s.VerleenToegang(1);
 
-            var (toegestaan, melding) = sportschool.VerleenToegang(1); // tweede bezoek
+            var (toegestaan, melding) = s.VerleenToegang(1);
 
             Assert.False(toegestaan);
-            Assert.Contains("weeklimiet", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("weeklimiet", melding, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact] // TC-03: Hoofdscenario - "Onbeperkt" abonnement heeft geen bezoeklimiet
-        public void TC03_Onbeperkt_MeerdereBezoeken_GeeftAltijdToegang()
+        [Fact] // TC-03: alternatief
+        public void TC03_TweeKeerPerWeek_DerdeBezoek_WordtGeweigerd()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            for (int i = 0; i < 5; i++)
-            {
-                var (toegestaan, _) = sportschool.VerleenToegang(3); // Chantal, Onbeperkt
-                Assert.True(toegestaan);
-            }
+            Assert.True(s.VerleenToegang(2).Toegestaan);
+            Assert.True(s.VerleenToegang(2).Toegestaan);
+            Assert.False(s.VerleenToegang(2).Toegestaan);
         }
 
-        [Fact] // TC-04: Alternatief scenario - onbekende sporter-ID wordt geweigerd
-        public void TC04_OnbekendeSporter_WordtGeweigerd()
+        [Fact] // TC-04: hoofdscenario
+        public void TC04_Onbeperkt_MeerdereBezoeken_GeeftAltijdToegang()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (toegestaan, melding) = sportschool.VerleenToegang(999);
+            for (int i = 0; i < 10; i++)
+                Assert.True(s.VerleenToegang(3).Toegestaan);
+        }
+
+        [Fact] // TC-05: hoofdscenario - de weeklimiet reset in een nieuwe week
+        public void TC05_NieuweWeek_GeeftWeerToegang()
+        {
+            var s = MaakTestSportschool();
+            s.VerleenToegang(1);                      // maandag week 40
+            s.Klok = () => Maandag.AddDays(6);        // zondag, nog steeds week 40
+            Assert.False(s.VerleenToegang(1).Toegestaan);
+
+            s.Klok = () => Maandag.AddDays(7);        // maandag week 41
+
+            Assert.True(s.VerleenToegang(1).Toegestaan);
+        }
+
+        [Fact] // TC-06: alternatief
+        public void TC06_OnbekendeSporter_WordtGeweigerd()
+        {
+            var s = MaakTestSportschool();
+
+            var (toegestaan, melding) = s.VerleenToegang(999);
 
             Assert.False(toegestaan);
             Assert.Contains("Onbekende sporter", melding);
         }
 
-        [Fact] // TC-05: Alternatief scenario - geannuleerd abonnement geeft geen toegang
-        public void TC05_GeannuleerdAbonnement_GeeftGeenToegang()
+        [Fact] // TC-07: acceptatiecriterium logging
+        public void TC07_ToegangspogingenWordenGelogd()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.AnnuleerAbonnement(1); // Anna annuleert eerst
+            var s = MaakTestSportschool();
 
-            var (toegestaan, melding) = sportschool.VerleenToegang(1);
+            s.VerleenToegang(1);   // toegestaan
+            s.VerleenToegang(1);   // geweigerd
+            s.VerleenToegang(999); // geweigerd
 
-            Assert.False(toegestaan);
-            Assert.Contains("niet actief", melding, System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Fact] // TC-06: Acceptatiecriterium - toegangspogingen worden gelogd (geslaagd en geweigerd)
-        public void TC06_ToegangspogingenWordenVastgelegdInLog()
-        {
-            var sportschool = MaakTestSportschool();
-
-            sportschool.VerleenToegang(1); // geslaagd
-            sportschool.VerleenToegang(1); // geweigerd (weeklimiet)
-
-            Assert.Equal(2, sportschool.ToegangsLog.Count);
+            Assert.Equal(3, s.ToegangsLog.Count);
+            Assert.Contains("verleend", s.ToegangsLog[0]);
+            Assert.Contains("Geweigerd", s.ToegangsLog[1]);
         }
 
         // ----------------------------------------------------------------
         // US-02: Abonnement annuleren
         // ----------------------------------------------------------------
 
-        [Fact] // TC-07: Hoofdscenario - een actief abonnement kan geannuleerd worden
-        public void TC07_ActiefAbonnement_KanGeannuleerdWorden()
+        [Fact] // TC-08: hoofdscenario - opzegging met bevestiging en opzegtermijn
+        public void TC08_Opzeggen_ZetEinddatumNaOpzegtermijn()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.AnnuleerAbonnement(1);
+            var (succes, melding) = s.AnnuleerAbonnement(1);
 
             Assert.True(succes);
-            Assert.False(sportschool.ZoekSporter(1)!.AbonnementActief);
-            Assert.Contains("geannuleerd", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(new DateTime(2026, 10, 28), s.ZoekSporter(1)!.Einddatum);
+            Assert.Contains("Bevestiging", melding);
+            Assert.Contains("28-10-2026", melding);
         }
 
-        [Fact] // TC-08: Alternatief scenario - een al-geannuleerd abonnement kan niet nogmaals geannuleerd worden
-        public void TC08_AlGeannuleerdAbonnement_GeeftFoutmelding()
+        [Fact] // TC-09: alternatief
+        public void TC09_DubbelOpzeggen_GeeftFoutmelding()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.AnnuleerAbonnement(1);
+            var s = MaakTestSportschool();
+            s.AnnuleerAbonnement(1);
 
-            var (succes, melding) = sportschool.AnnuleerAbonnement(1);
+            var (succes, melding) = s.AnnuleerAbonnement(1);
 
             Assert.False(succes);
-            Assert.Contains("al geen actief abonnement", melding);
+            Assert.Contains("al opgezegd", melding);
         }
 
-        [Fact] // TC-09: Integratie - na annuleren vervalt de toegang direct (samenhang US-01 + US-02)
-        public void TC09_NaAnnuleren_VervaltToegangDirect()
+        [Fact] // TC-10: integratie US-01 + US-02 - binnen opzegtermijn nog toegang
+        public void TC10_BinnenOpzegtermijn_NogToegang()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
+            s.AnnuleerAbonnement(3);
+            s.Klok = () => new DateTime(2026, 10, 27, 12, 0, 0); // dag voor einddatum
 
-            var (toegangVoor, _) = sportschool.VerleenToegang(2); // Bram mag eerst naar binnen
-            sportschool.AnnuleerAbonnement(2);
-            var (toegangNa, _) = sportschool.VerleenToegang(2);
+            Assert.True(s.VerleenToegang(3).Toegestaan);
+        }
 
-            Assert.True(toegangVoor);
-            Assert.False(toegangNa);
+        [Fact] // TC-11: integratie US-01 + US-02 - na einddatum geen toegang
+        public void TC11_NaEinddatum_GeenToegang()
+        {
+            var s = MaakTestSportschool();
+            s.AnnuleerAbonnement(3);
+            s.Klok = () => new DateTime(2026, 10, 28, 9, 0, 0); // op de einddatum
+
+            var (toegestaan, melding) = s.VerleenToegang(3);
+
+            Assert.False(toegestaan);
+            Assert.Contains("niet actief", melding);
+        }
+
+        // ----------------------------------------------------------------
+        // US-03: Abonnementsbeheer door medewerker
+        // ----------------------------------------------------------------
+
+        [Fact] // TC-12: hoofdscenario - zoeken op deel van de naam
+        public void TC12_ZoekenOpNaam_VindtSporter()
+        {
+            var s = MaakTestSportschool();
+
+            var resultaten = s.ZoekSporters("jans");
+
+            Assert.Single(resultaten);
+            Assert.Equal("Bram Jansen", resultaten[0].Naam);
+        }
+
+        [Fact] // TC-13: hoofdscenario - zoeken op ID en status inzien
+        public void TC13_ZoekenOpId_ToontStatus()
+        {
+            var s = MaakTestSportschool();
+
+            var sporter = s.ZoekSporters("3").Single();
+            string status = s.StatusVan(sporter);
+
+            Assert.Contains("Chantal Bakker", status);
+            Assert.Contains("Actief", status);
+        }
+
+        [Fact] // TC-14: alternatief - zoeken zonder resultaat
+        public void TC14_ZoekenZonderResultaat_GeeftLegeLijst()
+        {
+            var s = MaakTestSportschool();
+
+            Assert.Empty(s.ZoekSporters("Onbekend"));
+            Assert.Empty(s.ZoekSporters("   "));
+        }
+
+        [Fact] // TC-15: hoofdscenario - wijziging wordt uitgevoerd en gelogd
+        public void TC15_AbonnementWijzigen_WordtGelogd()
+        {
+            var s = MaakTestSportschool();
+
+            var (succes, _) = s.WijzigAbonnement(Receptie(s), 1, AbonnementType.Onbeperkt, true);
+
+            Assert.True(succes);
+            Assert.Equal(AbonnementType.Onbeperkt, s.ZoekSporter(1)!.Abonnement);
+            Assert.True(s.ZoekSporter(1)!.HeeftCursusAddendum);
+            Assert.Single(s.WijzigingsLog);
+            Assert.Contains("Medewerker #1", s.WijzigingsLog[0]);
+            Assert.Contains("Sporter #1", s.WijzigingsLog[0]);
+        }
+
+        [Fact] // TC-16: alternatief - wijziging zonder verandering
+        public void TC16_WijzigenZonderVerandering_GeeftFoutmelding()
+        {
+            var s = MaakTestSportschool();
+
+            var (succes, melding) = s.WijzigAbonnement(Receptie(s), 1, AbonnementType.EenKeerPerWeek, false);
+
+            Assert.False(succes);
+            Assert.Contains("niets gewijzigd", melding);
+            Assert.Empty(s.WijzigingsLog);
+        }
+
+        [Fact] // TC-17: herleidbaarheid - opzegging door medewerker is terug te vinden
+        public void TC17_OpzeggingDoorMedewerker_IsHerleidbaar()
+        {
+            var s = MaakTestSportschool();
+
+            s.AnnuleerAbonnement(4, "Medewerker #1");
+
+            Assert.Single(s.WijzigingsLog);
+            Assert.Contains("Medewerker #1", s.WijzigingsLog[0]);
+            Assert.Contains("sporter #4", s.WijzigingsLog[0]);
         }
 
         // ----------------------------------------------------------------
         // US-04 + US-05: Cursusinschrijving (addendum verplicht)
         // ----------------------------------------------------------------
 
-        [Fact] // TC-10: Hoofdscenario - sporter met addendum kan zich inschrijven
-        public void TC10_MetAddendum_InschrijvenLukt()
+        [Fact] // TC-18: hoofdscenario
+        public void TC18_MetAddendum_InschrijvenLukt()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.SchrijfInVoorCursus(2, "Yoga"); // Bram heeft addendum
+            var (succes, melding) = s.SchrijfInVoorCursus(2, "Yoga");
 
             Assert.True(succes);
-            Assert.Contains("Yoga", melding);
+            Assert.Contains("Bevestiging", melding);
+            Assert.Contains(2, s.ZoekCursus("Yoga")!.IngeschrevenSporterIds);
         }
 
-        [Fact] // TC-11: Alternatief scenario - sporter zonder addendum kan zich niet inschrijven
-        public void TC11_ZonderAddendum_InschrijvenWordtGeweigerd()
+        [Fact] // TC-19: alternatief
+        public void TC19_ZonderAddendum_InschrijvenWordtGeweigerd()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.SchrijfInVoorCursus(1, "Yoga"); // Anna heeft geen addendum
+            var (succes, melding) = s.SchrijfInVoorCursus(1, "Yoga");
 
             Assert.False(succes);
-            Assert.Contains("addendum", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("addendum", melding, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact] // TC-12: Alternatief scenario - dubbele inschrijving voor dezelfde cursus wordt voorkomen
-        public void TC12_DubbeleInschrijving_WordtVoorkomen()
+        [Fact] // TC-20: alternatief
+        public void TC20_DubbeleInschrijving_WordtVoorkomen()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.SchrijfInVoorCursus(2, "Yoga");
+            var s = MaakTestSportschool();
+            s.SchrijfInVoorCursus(2, "Yoga");
 
-            var (succes, melding) = sportschool.SchrijfInVoorCursus(2, "Yoga");
+            var (succes, melding) = s.SchrijfInVoorCursus(2, "yoga");
 
             Assert.False(succes);
             Assert.Contains("al ingeschreven", melding);
+            Assert.Single(s.ZoekCursus("Yoga")!.IngeschrevenSporterIds);
         }
 
-        [Fact] // TC-13: Alternatief scenario - volle cursus (max. capaciteit bereikt) wordt geweigerd
-        public void TC13_VolleCursus_WordtGeweigerd()
+        [Fact] // TC-21: alternatief
+        public void TC21_VolleCursus_WordtGeweigerd()
         {
-            var sportschool = MaakTestSportschool();
-            // Paaldansen heeft maar 1 plek; sporter 2 vult deze op.
-            sportschool.SchrijfInVoorCursus(2, "Paaldansen");
+            var s = MaakTestSportschool();
+            s.SchrijfInVoorCursus(2, "Paaldansen");
 
-            var (succes, melding) = sportschool.SchrijfInVoorCursus(3, "Paaldansen"); // Chantal heeft ook addendum
+            var (succes, melding) = s.SchrijfInVoorCursus(3, "Paaldansen");
 
             Assert.False(succes);
-            Assert.Contains("vol", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("vol", melding);
         }
 
-        [Fact] // TC-14: Alternatief scenario - inschrijven voor een niet-bestaande cursus geeft foutmelding
-        public void TC14_NietBestaandeCursus_GeeftFoutmelding()
+        [Fact] // TC-22: alternatief
+        public void TC22_NietBestaandeCursus_GeeftFoutmelding()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.SchrijfInVoorCursus(2, "Kickboksen");
+            var (succes, melding) = s.SchrijfInVoorCursus(2, "Kickboksen");
 
             Assert.False(succes);
             Assert.Contains("bestaat niet", melding);
+        }
+
+        [Fact] // TC-23: integratie US-03 + US-04 - addendum toegevoegd door medewerker
+        public void TC23_NaToevoegenAddendum_KanSporterInschrijven()
+        {
+            var s = MaakTestSportschool();
+            Assert.False(s.SchrijfInVoorCursus(4, "Pilates").Succes);
+
+            s.WijzigAbonnement(Receptie(s), 4, AbonnementType.EenKeerPerWeek, true);
+
+            Assert.True(s.SchrijfInVoorCursus(4, "Pilates").Succes);
+        }
+
+        [Fact] // TC-35: hertest bevinding B-01 - inschrijfrecht is vooraf te controleren
+        public void TC35_InschrijfrechtVooraf_WeigertZonderAddendumEnNaEinddatum()
+        {
+            var s = MaakTestSportschool();
+
+            Assert.False(s.MagCursussenVolgen(s.ZoekSporter(4)!).Succes); // geen addendum
+            Assert.True(s.MagCursussenVolgen(s.ZoekSporter(2)!).Succes);
+
+            s.AnnuleerAbonnement(2);
+            s.Klok = () => Maandag.AddMonths(2);
+
+            var (succes, melding) = s.MagCursussenVolgen(s.ZoekSporter(2)!);
+            Assert.False(succes);
+            Assert.Contains("geen actief abonnement", melding);
         }
 
         // ----------------------------------------------------------------
         // US-06: Cursusinschrijving annuleren
         // ----------------------------------------------------------------
 
-        [Fact] // TC-15: Hoofdscenario - een bestaande inschrijving annuleren maakt de plek weer vrij
-        public void TC15_BestaandeInschrijving_KanGeannuleerdWorden()
+        [Fact] // TC-24: hoofdscenario
+        public void TC24_BestaandeInschrijving_Annuleren_MaaktPlekVrij()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.SchrijfInVoorCursus(2, "Yoga");
+            var s = MaakTestSportschool();
+            s.SchrijfInVoorCursus(2, "Yoga");
 
-            var (succes, melding) = sportschool.AnnuleerCursusInschrijving(2, "Yoga");
+            var (succes, melding) = s.AnnuleerCursusInschrijving(2, "Yoga");
 
             Assert.True(succes);
-            Assert.Contains("geannuleerd", melding, System.StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(2, sportschool.Cursussen.Find(c => c.Naam == "Yoga")!.IngeschrevenSporterIds);
+            Assert.Contains("Bevestiging", melding);
+            Assert.Empty(s.ZoekCursus("Yoga")!.IngeschrevenSporterIds);
         }
 
-        [Fact] // TC-16: Alternatief scenario - annuleren zonder ingeschreven te zijn geeft foutmelding
-        public void TC16_NietIngeschreven_AnnulerenGeeftFoutmelding()
+        [Fact] // TC-25: alternatief
+        public void TC25_NietIngeschreven_AnnulerenGeeftFoutmelding()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.AnnuleerCursusInschrijving(2, "Yoga");
+            var (succes, melding) = s.AnnuleerCursusInschrijving(2, "Yoga");
 
             Assert.False(succes);
-            Assert.Contains("niet ingeschreven", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("niet ingeschreven", melding);
         }
 
-        [Fact] // TC-17: Integratie - na annuleren kan een andere sporter de vrijgekomen plek innemen
-        public void TC17_NaAnnuleren_KomtPlekVrijVoorAndereSporter()
+        [Fact] // TC-26: integratie - vrijgekomen plek is beschikbaar voor een ander
+        public void TC26_NaAnnuleren_KomtPlekVrijVoorAndereSporter()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.SchrijfInVoorCursus(2, "Paaldansen"); // vult de enige plek
-            sportschool.AnnuleerCursusInschrijving(2, "Paaldansen"); // maakt plek weer vrij
+            var s = MaakTestSportschool();
+            s.SchrijfInVoorCursus(2, "Paaldansen");
+            s.AnnuleerCursusInschrijving(2, "Paaldansen");
 
-            var (succes, _) = sportschool.SchrijfInVoorCursus(3, "Paaldansen"); // Chantal neemt de plek
-
-            Assert.True(succes);
+            Assert.True(s.SchrijfInVoorCursus(3, "Paaldansen").Succes);
         }
 
         // ----------------------------------------------------------------
         // US-07: Afspraak met personal coach
         // ----------------------------------------------------------------
 
-        [Fact] // TC-18: Hoofdscenario - een beschikbaar moment kan geboekt worden
-        public void TC18_BeschikbaarMoment_KanGeboektWorden()
+        [Fact] // TC-27: hoofdscenario
+        public void TC27_BeschikbaarMoment_KanGeboektWorden()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.PlanAfspraakMetCoach(1, "Jan", "Dinsdag 10:00");
+            var (succes, melding) = s.PlanAfspraakMetCoach(1, "jan", "dinsdag 10:00");
 
             Assert.True(succes);
-            Assert.Contains("bevestigd", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("bevestigd", melding);
+            Assert.DoesNotContain("Dinsdag 10:00", s.Coaches[0].BeschikbareMomenten);
         }
 
-        [Fact] // TC-19: Alternatief scenario - een reeds geboekt moment kan niet nogmaals geboekt worden
-        public void TC19_DubbeleBoeking_WordtVoorkomen()
+        [Fact] // TC-28: alternatief
+        public void TC28_DubbeleBoeking_WordtVoorkomen()
         {
-            var sportschool = MaakTestSportschool();
-            sportschool.PlanAfspraakMetCoach(1, "Jan", "Dinsdag 10:00");
+            var s = MaakTestSportschool();
+            s.PlanAfspraakMetCoach(1, "Jan", "Dinsdag 10:00");
 
-            var (succes, melding) = sportschool.PlanAfspraakMetCoach(4, "Jan", "Dinsdag 10:00");
+            var (succes, melding) = s.PlanAfspraakMetCoach(4, "Jan", "Dinsdag 10:00");
 
             Assert.False(succes);
-            Assert.Contains("niet beschikbaar", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("niet beschikbaar", melding);
+            Assert.Equal(1, s.Coaches[0].GeboekteMomenten["Dinsdag 10:00"]);
         }
 
-        [Fact] // TC-20: Alternatief scenario - boeken bij een niet-bestaande coach geeft foutmelding
-        public void TC20_OnbekendeCoach_GeeftFoutmelding()
+        [Fact] // TC-29: alternatief
+        public void TC29_OnbekendeCoach_GeeftFoutmelding()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.PlanAfspraakMetCoach(1, "NietBestaandeCoach", "Dinsdag 10:00");
+            var (succes, melding) = s.PlanAfspraakMetCoach(1, "Sanne", "Dinsdag 10:00");
 
             Assert.False(succes);
             Assert.Contains("bestaat niet", melding);
         }
 
-        [Fact] // TC-21: Alternatief scenario - boeken van een niet-bestaand/reeds vervallen moment geeft foutmelding
-        public void TC21_NietBeschikbaarMoment_GeeftFoutmelding()
+        [Fact] // TC-30: alternatief
+        public void TC30_NietBeschikbaarMoment_GeeftFoutmelding()
         {
-            var sportschool = MaakTestSportschool();
+            var s = MaakTestSportschool();
 
-            var (succes, melding) = sportschool.PlanAfspraakMetCoach(1, "Jan", "Zaterdag 23:00");
+            var (succes, melding) = s.PlanAfspraakMetCoach(1, "Jan", "Zaterdag 23:00");
 
             Assert.False(succes);
-            Assert.Contains("niet beschikbaar", melding, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("niet beschikbaar", melding);
+        }
+
+        // ----------------------------------------------------------------
+        // US-08: Bescherming persoonsgegevens / toegangscontrole
+        // ----------------------------------------------------------------
+
+        [Fact] // TC-31: hoofdscenario
+        public void TC31_MedewerkerMetJuistePincode_KanInloggen()
+        {
+            var s = MaakTestSportschool();
+
+            Assert.NotNull(s.LogInMedewerker(1, "1234"));
+        }
+
+        [Fact] // TC-32: alternatief
+        public void TC32_FoutePincodeOfOnbekendId_InloggenMislukt()
+        {
+            var s = MaakTestSportschool();
+
+            Assert.Null(s.LogInMedewerker(1, "0000"));
+            Assert.Null(s.LogInMedewerker(1, ""));
+            Assert.Null(s.LogInMedewerker(99, "1234"));
+        }
+
+        [Fact] // TC-33: pincode wordt niet leesbaar opgeslagen
+        public void TC33_PincodeWordtAlleenAlsHashOpgeslagen()
+        {
+            var s = MaakTestSportschool();
+
+            string opgeslagen = s.Medewerkers[0].PincodeHash;
+
+            Assert.NotEqual("1234", opgeslagen);
+            Assert.Equal(64, opgeslagen.Length); // SHA-256 in hex
+        }
+
+        [Fact] // TC-34: dataminimalisatie - de toegangslog bevat geen namen
+        public void TC34_ToegangsLog_BevatGeenNamen()
+        {
+            var s = MaakTestSportschool();
+
+            s.VerleenToegang(1);
+            s.VerleenToegang(2);
+
+            Assert.All(s.ToegangsLog, regel =>
+            {
+                Assert.DoesNotContain("Anna", regel);
+                Assert.DoesNotContain("Bram", regel);
+            });
         }
     }
 }

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace SportschoolDeKast.Models
 {
     // Een lid van de sportschool.
@@ -7,11 +10,14 @@ namespace SportschoolDeKast.Models
         public string Naam { get; }
         public AbonnementType Abonnement { get; set; }
         public bool HeeftCursusAddendum { get; set; }
-        public bool AbonnementActief { get; set; } = true;
 
-        // Aantal keer dat deze sporter deze week al is binnengelaten.
-        // Wordt gebruikt om de bezoeklimiet van 1x/2x-per-week te handhaven.
-        public int BezoekenDezeWeek { get; set; } = 0;
+        // Null = lopend abonnement. Na opzegging staat hier de datum waarop de
+        // opzegtermijn afloopt; tot die datum houdt de sporter nog toegang.
+        public DateTime? Einddatum { get; set; }
+
+        // Tijdstippen van toegestane bezoeken. Het aantal bezoeken "deze week"
+        // wordt hieruit berekend, zodat de weeklimiet elke maandag vanzelf reset.
+        public List<DateTime> Bezoeken { get; } = new List<DateTime>();
 
         public Sporter(int id, string naam, AbonnementType abonnement, bool heeftCursusAddendum = false)
         {
