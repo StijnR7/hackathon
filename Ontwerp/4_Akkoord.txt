@@ -1,0 +1,32 @@
+=================================================================
+AKKOORD / FEEDBACK LEIDINGGEVENDE OP HET ONTWERP
+Fase 1 - Werkproces B1-K1-W2
+=================================================================
+In te vullen door de begeleider (opdrachtgever) na het bespreken van
+het ontwerp.
+
+Ontwerpstukken besproken:
+  [ ] 1_FunctioneelOntwerp.txt   (user stories, MoSCoW, acceptatiecriteria)
+  [ ] datamodel.dbml             (ERD, gecontroleerd op dbdiagram.io)
+  [ ] usecasediagram.puml        (use case diagram)
+  [ ] 3_Wireframes.txt           (schermen en schermstroom)
+  [ ] activiteitendiagram_toegang.puml
+  [ ] activiteitendiagram_cursusinschrijving.puml
+  [ ] klassendiagram.puml
+  [ ] 2_TechnischOntwerp.txt     (keuzes, architectuur, privacy/ethiek/security)
+
+Afgesproken 100%-basis voor realisatie en test:
+  Alle acceptatiecriteria uit 1_FunctioneelOntwerp.txt, hoofdstuk 5.
+  [ ] Akkoord   [ ] Aangepast (zie feedback)
+
+Feedback:
+  ...............................................................
+  ...............................................................
+  ...............................................................
+
+Verwerkte aanpassingen naar aanleiding van de feedback:
+  ...............................................................
+
+Naam begeleider: ............................
+Datum:           ............................
+Akkoord:         [ ] ja   [ ] nee

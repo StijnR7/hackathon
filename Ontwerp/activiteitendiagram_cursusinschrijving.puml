@@ -1,0 +1,64 @@
+@startuml activiteitendiagram_cursusinschrijving
+title Activiteitendiagram - Inschrijven voor een cursus (US-04, US-05)
+
+|Sporter|
+start
+:Kiest "Inschrijven voor een cursus";
+
+|Systeem|
+if (Abonnement actief?) then (nee)
+  |Sporter|
+  :Ziet melding "Geen actief abonnement";
+  stop
+else (ja)
+endif
+
+|Systeem|
+if (Heeft cursus-addendum?) then (nee)
+  |Sporter|
+  :Ziet melding "Geen cursus-addendum.
+  Vraag een medewerker om een addendum.";
+  stop
+else (ja)
+endif
+
+|Systeem|
+:Toon cursussen met moment en bezetting;
+
+|Sporter|
+:Voert cursusnaam in;
+
+|Systeem|
+if (Cursus bestaat?) then (nee)
+  |Sporter|
+  :Ziet melding "Cursus bestaat niet";
+  stop
+else (ja)
+endif
+
+|Sporter|
+if (Bevestigt inschrijving? (ja/nee)) then (nee)
+  :Ziet "Inschrijving afgebroken";
+  stop
+else (ja)
+endif
+
+|Systeem|
+if (Al ingeschreven?) then (ja)
+  |Sporter|
+  :Ziet melding "Al ingeschreven";
+  stop
+elseif (Cursus vol?) then (ja)
+  |Sporter|
+  :Ziet melding "Cursus zit vol";
+  stop
+else (nee)
+endif
+
+|Systeem|
+:Voeg sporter toe aan deelnemers;
+
+|Sporter|
+:Ziet "Bevestiging: ingeschreven voor <cursus>";
+stop
+@enduml

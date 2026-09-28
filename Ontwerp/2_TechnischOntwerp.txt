@@ -1,0 +1,189 @@
+=================================================================
+TECHNISCH ONTWERP + ONTWERPTOELICHTING - SPORTSCHOOL "DE KAST"
+Fase 1 - Werkproces B1-K1-W2 "Ontwerpt software"
+=================================================================
+
+1. KEUZE TECHNISCHE OMGEVING (ONDERBOUWD)
+----------------------------------------
+Programmeertaal: C#
+  - Sterk getypeerd: veel fouten (verkeerde types, null) worden al bij het
+    compileren gevonden. Dat past bij bedrijfsregels rond toegang, waar
+    fouten direct gevolgen hebben voor klanten.
+  - Objectgeoriënteerd: de domeinbegrippen (Sporter, Cursus, Coach,
+    Medewerker) zijn één-op-één als klassen te modelleren.
+  - Veelgebruikt in het Nederlandse bedrijfsleven en onderdeel van de
+    opleiding, dus goed onderhoudbaar door andere developers.
+
+Framework: .NET 10 (console-applicatie)
+  - Cross-platform (Windows, Linux) en gratis; draait op een goedkope
+    kiosk-pc.
+  - Bevat standaard alles wat nodig is (collecties, LINQ, SHA-256,
+    ISO-weeknummers) zonder externe pakketten, dus geen extra
+    afhankelijkheden of licentiekosten.
+  - Een console-app is het snelst te bouwen binnen de 12 uur en laat de
+    bedrijfslogica zien zonder tijd te verliezen aan UI. Omdat de logica
+    in een aparte service-laag zit, kan er later een GUI (bijv. WPF of
+    een webapp met ASP.NET) op worden gezet zonder de regels te herschrijven.
+
+Testframework: xUnit
+  - Standaard testframework voor .NET, draait via `dotnet test`.
+
+Ontwikkelomgeving: Visual Studio Code + C# Dev Kit
+  - Gratis, licht, ingebouwde Git-ondersteuning en terminal.
+
+Versiebeheer: Git + GitHub (github.com/StijnR7/hackathon)
+  - Herleidbare commits per onderdeel; .gitignore houdt build-output
+    (bin/, obj/) buiten de repository.
+
+2. ARCHITECTUUR
+---------------
+Gelaagde opbouw (zie klassendiagram.puml):
+
+  +------------------------------------------------+
+  | Presentatielaag   Program.cs                   |
+  |   menu's, invoer vragen + valideren, meldingen |
+  |   tonen. Bevat GEEN bedrijfsregels.            |
+  +-----------------------+------------------------+
+                          | roept aan
+  +-----------------------v------------------------+
+  | Servicelaag       Services/Sportschool.cs      |
+  |   alle bedrijfsregels (US-01 t/m US-08),       |
+  |   logging. Geeft (bool, melding) terug.        |
+  +-----------------------+------------------------+
+                          | gebruikt
+  +-----------------------v------------------------+
+  | Modellaag         Models/*.cs                  |
+  |   Sporter, Cursus, Coach, Medewerker,          |
+  |   AbonnementType. Alleen data.                 |
+  +------------------------------------------------+
+
+Waarom zo:
+  - Bedrijfsregels staan op één plek en zijn los van de console te testen
+    (de xUnit-tests roepen de servicelaag direct aan).
+  - Elke servicemethode geeft een tuple (Succes, Melding) terug. Zo krijgt
+    de gebruiker altijd een begrijpelijke reden te zien (US-01, US-04),
+    zonder exceptions als normale programmaflow.
+  - De klok is instelbaar (Sportschool.Klok). Daardoor zijn tijdsafhankelijke
+    regels (opzegtermijn, weekreset) betrouwbaar te testen.
+
+3. DATAMODEL
+------------
+Zie datamodel.dbml (ERD, te renderen op dbdiagram.io).
+
+Het ERD beschrijft de database zoals die in productie zou worden gebruikt
+(genormaliseerd, 3NF):
+  - sporter           persoonsgegevens (alleen naam: dataminimalisatie)
+  - abonnement        type, addendum, startdatum, einddatum; los van
+                      sporter zodat de historie van abonnementen bewaard
+                      blijft
+  - bezoek            één rij per toegestaan bezoek (basis voor weeklimiet)
+  - cursus            naam, moment, max_deelnemers
+  - cursusinschrijving koppeltabel sporter <-> cursus, met unieke
+                      combinatie (voorkomt dubbele inschrijving in de
+                      database zelf)
+  - coach, coach_moment  agenda; sporter_id is NULL zolang het moment vrij
+                      is, uniek per (coach, moment) -> geen dubbele boeking
+  - medewerker        alleen pincode_hash, nooit de pincode
+  - toegangslog, wijzigingslog  audit trail
+
+In het prototype staat dit vereenvoudigd in het geheugen:
+  - Abonnementsgegevens staan als velden op Sporter (één actief abonnement).
+  - Bezoeken zijn een List<DateTime> op Sporter.
+  - Inschrijvingen zijn een List<int> met sporter-ID's op Cursus.
+  - Geboekte coachmomenten staan in een Dictionary op Coach.
+
+4. PROGRAMMALOGICA
+------------------
+Zie activiteitendiagram_toegang.puml (kernproces, US-01/US-02) en
+activiteitendiagram_cursusinschrijving.puml (US-04/US-05).
+
+Kernregels:
+  Weeklimiet    1x/week -> 1, 2x/week -> 2, Onbeperkt -> geen limiet.
+  Weektelling   bezoeken met hetzelfde ISO-jaar + ISO-weeknummer als nu;
+                daardoor reset de teller automatisch elke maandag.
+  Actief        einddatum is leeg, of vandaag ligt vóór de einddatum.
+  Opzeggen      einddatum = vandaag + 1 maand (opzegtermijn).
+  Cursus        vereist: actief abonnement, addendum, cursus bestaat,
+                niet al ingeschreven, cursus niet vol.
+  Coach         moment moet in de lijst met beschikbare momenten staan;
+                na boeken verdwijnt het uit die lijst.
+
+5. HARDWARE (BUDGET € 2.000,-)
+------------------------------
+Voorstel voor een selfservice-kiosk bij de ingang. Prijzen zijn
+indicatief (niet geoffreerd):
+
+  Mini-pc (bijv. Intel NUC-klasse, Windows/Linux)     ca. €  500
+  Touchscreen-monitor 22"                             ca. €  300
+  USB NFC/RFID-paslezer (voor de ledenpas)           ca. €   60
+  Elektronisch deurslot + relaismodule voor de deur  ca. €  500
+  Muur-/zuilbevestiging, kabels                       ca. €  150
+  Reserve                                              ca. €  490
+                                                      -----------
+  Totaal                                              ca. € 2.000
+
+In het prototype wordt het scannen van de pas gesimuleerd door het
+sporter-ID in te typen.
+
+6. PRIVACY, ETHIEK EN SECURITY
+------------------------------
+Privacy (AVG)
+  - Dataminimalisatie: van sporters wordt alleen opgeslagen wat nodig is
+    voor de dienst: naam, abonnement, bezoekmomenten. Geen adres, BSN,
+    geboortedatum of bankgegevens in dit systeem.
+  - De toegangslog bevat alleen het sporter-ID, geen naam (TC-34). Zo
+    levert een uitgelekte log niet direct herleidbare namen op.
+  - Een sporter ziet in het sportermenu alleen zijn/haar eigen gegevens,
+    nooit die van andere sporters.
+  - Bewaartermijn (voor productie): bezoeken en logs na 12 maanden
+    verwijderen of anonimiseren; gegevens van opgezegde leden na afloop
+    van de wettelijke bewaarplicht verwijderen.
+
+Security
+  - Rolscheiding: beheerfuncties (zoeken, wijzigen, logs) zijn alleen
+    bereikbaar na inloggen als medewerker (US-08).
+  - Pincodes worden alleen als SHA-256-hash opgeslagen, nooit leesbaar
+    (TC-33). In productie: een trage hash met salt (bijv. PBKDF2 of
+    bcrypt) en een blokkade na meerdere foute pogingen.
+  - Bij een mislukte login zegt het systeem niet of het ID of de pincode
+    fout was; dat maakt raden lastiger.
+  - Alle invoer wordt gevalideerd: getallen worden met int.TryParse
+    gecontroleerd, ja/nee-vragen accepteren alleen ja/nee, en
+    namen/momenten worden opgezocht in bestaande lijsten in plaats van
+    blind overgenomen. Ongeldige invoer leidt tot een melding, niet tot
+    een crash.
+  - Audit trail: elke wijziging en opzegging wordt gelogd met wie
+    (sporter of medewerker-ID), wat en wanneer (US-03).
+  - Bekend risico prototype: een sporter logt in met alleen het ID. In
+    productie gebeurt dat met de fysieke NFC-pas, zodat iemand niet met
+    een geraden ID bij andermans gegevens kan.
+
+Ethiek
+  - Transparantie: bij elke weigering vertelt het systeem waarom
+    (weeklimiet, opgezegd, geen addendum), zodat een sporter niet
+    zonder uitleg wordt buitengesloten.
+  - Geen verborgen tracking: bezoekmomenten worden alleen gebruikt voor
+    de weeklimiet, niet voor profilering of marketing.
+  - Opzeggen is net zo makkelijk als inschrijven: de sporter kan zelf
+    opzeggen, met bevestiging, zonder tussenkomst van personeel.
+  - Menselijke terugvaloptie: een medewerker kan altijd het abonnement
+    inzien en aanpassen als de automatische regel onterecht lijkt.
+
+7. CONTROLE ONTWERP TEGEN EISEN
+-------------------------------
+Elk acceptatiecriterium uit het functioneel ontwerp (hoofdstuk 5) is
+gekoppeld aan een onderdeel van dit ontwerp en aan een testgeval.
+Tijdens het ontwerpen zijn deze aanpassingen gedaan:
+  - US-02 "vervalt volgens opzegtermijn": eerst was de toegang per direct
+    ingetrokken. Dat voldoet niet aan het criterium, dus er is een
+    einddatum met een opzegtermijn van 1 maand toegevoegd.
+  - US-01 "per week": een losse teller moest handmatig gereset worden.
+    Dat is vervangen door het opslaan van bezoekmomenten en tellen per
+    ISO-week, zodat de reset automatisch gaat.
+  - US-05 "pas geldig na bevestiging": een ja/nee-bevestiging toegevoegd
+    vóór de inschrijving.
+  - US-08 "scheiding sporter/medewerker": aparte menu's en een pincode
+    voor medewerkers toegevoegd.
+
+Ter controle door de leidinggevende: akkoord/feedback op dit ontwerp
+vastleggen vóór oplevering (zie 4_Akkoord.txt).

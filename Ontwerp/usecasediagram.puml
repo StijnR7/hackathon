@@ -1,0 +1,49 @@
+@startuml usecasediagram
+title Use case diagram - Selfservice Sportschool De Kast
+left to right direction
+skinparam packageStyle rectangle
+
+actor Sporter
+actor Medewerker
+
+rectangle "Selfservice-systeem De Kast" {
+  usecase "Inloggen met pas / sporter-ID" as UC_LoginS
+  usecase "Inchecken (toegang)\nUS-01" as UC_Toegang
+  usecase "Weeklimiet controleren" as UC_Limiet
+  usecase "Toegangspoging loggen" as UC_Log
+  usecase "Eigen abonnement bekijken" as UC_Eigen
+  usecase "Abonnement opzeggen\nUS-02" as UC_Opzeggen
+  usecase "Inschrijven voor cursus\nUS-05" as UC_Cursus
+  usecase "Addendum controleren\nUS-04" as UC_Addendum
+  usecase "Cursusinschrijving annuleren\nUS-06" as UC_CursusAnnuleren
+  usecase "Afspraak met coach inplannen\nUS-07" as UC_Coach
+
+  usecase "Inloggen met ID + pincode\nUS-08" as UC_LoginM
+  usecase "Sporter zoeken en status inzien\nUS-03" as UC_Zoeken
+  usecase "Abonnement wijzigen\nUS-03" as UC_Wijzigen
+  usecase "Wijziging loggen" as UC_WijzLog
+  usecase "Logs bekijken" as UC_Logs
+}
+
+Sporter --> UC_LoginS
+Sporter --> UC_Toegang
+Sporter --> UC_Eigen
+Sporter --> UC_Opzeggen
+Sporter --> UC_Cursus
+Sporter --> UC_CursusAnnuleren
+Sporter --> UC_Coach
+
+Medewerker --> UC_LoginM
+Medewerker --> UC_Zoeken
+Medewerker --> UC_Wijzigen
+Medewerker --> UC_Opzeggen
+Medewerker --> UC_Logs
+
+UC_Toegang ..> UC_Limiet : <<include>>
+UC_Toegang ..> UC_Log : <<include>>
+UC_Cursus ..> UC_Addendum : <<include>>
+UC_Wijzigen ..> UC_WijzLog : <<include>>
+UC_Opzeggen ..> UC_WijzLog : <<include>>
+UC_Wijzigen ..> UC_Zoeken : <<include>>
+
+@enduml

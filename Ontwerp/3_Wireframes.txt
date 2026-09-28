@@ -1,0 +1,212 @@
+=================================================================
+WIREFRAMES / MOCK-UPS - SPORTSCHOOL "DE KAST"
+Fase 1 - Werkproces B1-K1-W2 "Ontwerpt software"
+=================================================================
+
+De applicatie is een console-applicatie (CLI) op een kiosk-pc bij de
+ingang. De wireframes hieronder tonen elk scherm zoals het in de
+terminal verschijnt. Tekst tussen < > is invoer van de gebruiker.
+
+-----------------------------------------------------------------
+SCHERMSTROOM
+-----------------------------------------------------------------
+
+                     +-------------+
+                     |  [S0]       |
+                     |  Hoofdmenu  |
+                     +------+------+
+               1 /          |          \ 0
+                /           | 2         \
+   +-----------v--+   +-----v--------+   +----------+
+   | [S1] Login   |   | [M1] Login   |   | Afsluiten|
+   | sporter      |   | medewerker   |   +----------+
+   +------+-------+   +------+-------+
+          | ok               | ok (fout -> terug naar S0)
+   +------v-------+   +------v-------+
+   | [S2]         |   | [M2]         |
+   | Sportermenu  |   | Medewerker-  |
+   +--+--+--+--+--+   | menu         |
+      |  |  |  |      +--+--+--+--+--+
+      |  |  |  |         |  |  |  |
+      |  |  |  +-> [S6] Opzeggen      [M3] Zoeken / status
+      |  |  +----> [S5] Coach-afspraak [M4] Abonnement wijzigen
+      |  +-------> [S4] Cursus in-/uitschrijven
+      +----------> [S3] Inchecken     [M5] Logs
+
+Na elke actie keert de gebruiker terug naar zijn eigen menu (S2 of M2).
+Met 0 logt de gebruiker uit en komt hij terug in het hoofdmenu (S0).
+
+-----------------------------------------------------------------
+[S0] HOOFDMENU
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| =================================================        |
+|    SPORTSCHOOL 'DE KAST' - SELFSERVICE CLI               |
+| =================================================        |
+|                                                          |
+| Hoofdmenu:                                               |
+|  1. Inloggen als sporter                                 |
+|  2. Inloggen als medewerker                              |
+|  0. Afsluiten                                            |
+| > <1>                                                    |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[S1] + [S2] LOGIN SPORTER EN SPORTERMENU
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| Je sporter-ID (staat op je pas): <2>                     |
+| Welkom, Bram Jansen.                                     |
+|                                                          |
+| Sportermenu (Bram Jansen):                               |
+|  1. Inchecken (toegang)                                  |
+|  2. Mijn abonnement bekijken                             |
+|  3. Inschrijven voor een cursus                          |
+|  4. Cursusinschrijving annuleren                         |
+|  5. Afspraak met personal coach                          |
+|  6. Abonnement opzeggen                                  |
+|  0. Uitloggen                                            |
+| > _                                                      |
++----------------------------------------------------------+
+Fout: "Onbekend sporter-ID." -> terug naar hoofdmenu.
+
+-----------------------------------------------------------------
+[S3] INCHECKEN (US-01)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <1>                                                    |
+| Bram Jansen: toegang verleend. Welkom!                   |
++----------------------------------------------------------+
+Varianten:
+  "Bram Jansen: weeklimiet (2x) al bereikt. Toegang geweigerd."
+  "Bram Jansen: abonnement is opgezegd/niet actief. Toegang geweigerd."
+
+-----------------------------------------------------------------
+[S3b] MIJN ABONNEMENT (US-01/US-02)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <2>                                                    |
+| #2 Bram Jansen | TweeKeerPerWeek | Actief |               |
+|   Cursus-addendum: ja | Bezoeken deze week: 1/2           |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[S4] CURSUS INSCHRIJVEN (US-04, US-05) EN ANNULEREN (US-06)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <3>                                                    |
+| --- Cursussen ---                                        |
+| Yoga (Maandag 18:00) - 0/2 plekken bezet                 |
+| Pilates (Woensdag 19:00) - 0/2 plekken bezet             |
+| Paaldansen (Vrijdag 20:00) - 0/1 plekken bezet           |
+| Naam van de cursus: <Yoga>                               |
+| Inschrijven voor Yoga op Maandag 18:00? (ja/nee): <ja>   |
+| Bevestiging: Bram Jansen is ingeschreven voor Yoga       |
+| (Maandag 18:00).                                         |
++----------------------------------------------------------+
+Varianten: "geen cursus-addendum", "al ingeschreven", "zit vol",
+"bestaat niet", "Inschrijving afgebroken." (bij nee).
+
++----------------------------------------------------------+
+| > <4>                                                    |
+| Je inschrijvingen:                                       |
+|  - Yoga (Maandag 18:00)                                  |
+| Welke cursus annuleren? <Yoga>                           |
+| Bevestiging: inschrijving voor Yoga geannuleerd.         |
+| De plek is weer vrij.                                    |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[S5] AFSPRAAK MET PERSONAL COACH (US-07)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <5>                                                    |
+| Beschikbare coaches en momenten:                         |
+|  - Jan: Dinsdag 10:00, Dinsdag 11:00, Donderdag 09:00    |
+|  - Erik: Maandag 08:00, Woensdag 17:00                   |
+| Naam van de coach: <Jan>                                 |
+| Gewenst moment (bv. 'Dinsdag 10:00'): <Dinsdag 10:00>    |
+| Afspraak bevestigd: Bram Jansen met Jan op Dinsdag 10:00.|
++----------------------------------------------------------+
+Variant: "Moment 'Dinsdag 10:00' is niet beschikbaar bij Jan."
+
+-----------------------------------------------------------------
+[S6] ABONNEMENT OPZEGGEN (US-02)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <6>                                                    |
+| Weet je zeker dat je het abonnement van Bram Jansen wilt |
+| opzeggen? (ja/nee): <ja>                                 |
+| Bevestiging: abonnement van Bram Jansen is opgezegd.     |
+| Toegang blijft geldig tot 28-10-2026.                    |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[M1] + [M2] LOGIN MEDEWERKER EN MEDEWERKERMENU (US-08)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| Medewerker-ID: <1>                                       |
+| Pincode: <****>                                          |
+| Ingelogd als Receptie De Kast.                           |
+|                                                          |
+| Medewerkermenu (Receptie De Kast):                       |
+|  1. Sporter zoeken en status inzien                      |
+|  2. Abonnement wijzigen                                  |
+|  3. Abonnement opzeggen namens sporter                   |
+|  4. Overzicht cursussen                                  |
+|  5. Toegangslog bekijken                                 |
+|  6. Wijzigingslog bekijken                               |
+|  0. Uitloggen                                            |
+| > _                                                      |
++----------------------------------------------------------+
+Fout: "Inloggen mislukt: ID of pincode onjuist."
+
+-----------------------------------------------------------------
+[M3] SPORTER ZOEKEN (US-03)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <1>                                                    |
+| Zoek op naam of ID: <jans>                               |
+| #2 Bram Jansen | TweeKeerPerWeek | Actief |               |
+|   Cursus-addendum: ja | Bezoeken deze week: 1/2           |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[M4] ABONNEMENT WIJZIGEN (US-03)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| > <2>                                                    |
+| Sporter-ID: <4>                                          |
+| Huidig: #4 Dirk Smit | EenKeerPerWeek | Actief | ...      |
+| Nieuw abonnementstype:                                   |
+|  1. 1x per week                                          |
+|  2. 2x per week                                          |
+|  3. Onbeperkt                                            |
+| > <3>                                                    |
+| Cursus-addendum? (ja/nee): <ja>                          |
+| Abonnement van Dirk Smit gewijzigd naar Onbeperkt,       |
+| addendum ja.                                             |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+[M5] LOGS (US-01, US-03)
+-----------------------------------------------------------------
++----------------------------------------------------------+
+| --- Wijzigingslog ---                                    |
+| [2026-09-28 13:03] Medewerker #1: Sporter #4 gewijzigd   |
+|   van [EenKeerPerWeek, addendum nee]                     |
+|   naar [Onbeperkt, addendum ja]                          |
+|                                                          |
+| --- Toegangslog ---                                      |
+| [2026-09-28 13:03] Sporter #2: Toegang verleend (1/2)    |
++----------------------------------------------------------+
+
+-----------------------------------------------------------------
+ONTWERPKEUZES VOOR USABILITY
+-----------------------------------------------------------------
+  - Elk menu is genummerd en 0 betekent altijd "terug/uitloggen".
+  - Waar een naam ingevoerd moet worden (cursus, coach), toont het
+    systeem eerst de geldige keuzes. De invoer is hoofdletterongevoelig.
+  - Onomkeerbare acties (opzeggen, inschrijven) vragen eerst ja/nee.
+  - Elke melding noemt de sporter en de reden, in gewoon Nederlands.
+  - De medewerker ziet de huidige situatie vóór hij/zij iets wijzigt.

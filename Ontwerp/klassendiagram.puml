@@ -1,0 +1,90 @@
+@startuml klassendiagram
+title Klassendiagram - Sportschool De Kast (prototype)
+skinparam classAttributeIconSize 0
+
+package "Presentatielaag" {
+  class Program <<static>> {
+    - _sportschool : Sportschool
+    + Main() : void
+    - SporterSessie() : void
+    - MedewerkerSessie() : void
+    - VraagTekst(vraag : string) : string
+    - VraagGetal(vraag : string) : int
+    - VraagJaNee(vraag : string) : bool
+    - SeedData() : void
+  }
+}
+
+package "Servicelaag" {
+  class Sportschool {
+    + OpzegtermijnInMaanden : int = 1
+    + Sporters : List<Sporter>
+    + Cursussen : List<Cursus>
+    + Coaches : List<Coach>
+    + Medewerkers : List<Medewerker>
+    + ToegangsLog : List<string>
+    + WijzigingsLog : List<string>
+    + Klok : Func<DateTime>
+    + VerleenToegang(sporterId : int) : (bool, string)
+    + AnnuleerAbonnement(sporterId : int, door : string) : (bool, string)
+    + ZoekSporters(zoekterm : string) : List<Sporter>
+    + StatusVan(sporter : Sporter) : string
+    + WijzigAbonnement(m : Medewerker, sporterId : int, type : AbonnementType, addendum : bool) : (bool, string)
+    + MagCursussenVolgen(sporter : Sporter) : (bool, string)
+    + SchrijfInVoorCursus(sporterId : int, cursusNaam : string) : (bool, string)
+    + AnnuleerCursusInschrijving(sporterId : int, cursusNaam : string) : (bool, string)
+    + PlanAfspraakMetCoach(sporterId : int, coachNaam : string, moment : string) : (bool, string)
+    + LogInMedewerker(id : int, pincode : string) : Medewerker
+    + IsAbonnementActief(sporter : Sporter) : bool
+    + BezoekenDezeWeek(sporter : Sporter) : int
+    + {static} WeekLimiet(type : AbonnementType) : int
+    + {static} HashPincode(pincode : string) : string
+  }
+}
+
+package "Modellaag" {
+  enum AbonnementType {
+    EenKeerPerWeek
+    TweeKeerPerWeek
+    Onbeperkt
+  }
+
+  class Sporter {
+    + Id : int
+    + Naam : string
+    + Abonnement : AbonnementType
+    + HeeftCursusAddendum : bool
+    + Einddatum : DateTime?
+    + Bezoeken : List<DateTime>
+  }
+
+  class Cursus {
+    + Naam : string
+    + Moment : string
+    + MaxDeelnemers : int
+    + IngeschrevenSporterIds : List<int>
+    + IsVol : bool
+  }
+
+  class Coach {
+    + Naam : string
+    + BeschikbareMomenten : List<string>
+    + GeboekteMomenten : Dictionary<string, int>
+  }
+
+  class Medewerker {
+    + Id : int
+    + Naam : string
+    + PincodeHash : string
+  }
+}
+
+Program --> Sportschool : gebruikt
+Sportschool "1" o-- "*" Sporter
+Sportschool "1" o-- "*" Cursus
+Sportschool "1" o-- "*" Coach
+Sportschool "1" o-- "*" Medewerker
+Sporter --> AbonnementType
+Cursus ..> Sporter : sporter-ID's
+Coach ..> Sporter : sporter-ID per geboekt moment
+@enduml

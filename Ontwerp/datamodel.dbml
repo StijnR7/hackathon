@@ -1,0 +1,93 @@
+// ERD Sportschool De Kast - render op https://dbdiagram.io
+
+Project SportschoolDeKast {
+  database_type: 'PostgreSQL'
+  Note: 'Datamodel voor productie. Het prototype houdt deze gegevens vereenvoudigd in het geheugen.'
+}
+
+Enum abonnement_type {
+  een_keer_per_week
+  twee_keer_per_week
+  onbeperkt
+}
+
+Table sporter {
+  id integer [pk, increment]
+  naam varchar(100) [not null]
+  pasnummer varchar(20) [not null, unique, note: 'NFC-pas; in het prototype = sporter-ID']
+  Note: 'Dataminimalisatie: geen adres, BSN of bankgegevens'
+}
+
+Table abonnement {
+  id integer [pk, increment]
+  sporter_id integer [not null, ref: > sporter.id]
+  type abonnement_type [not null]
+  cursus_addendum boolean [not null, default: false]
+  startdatum date [not null]
+  einddatum date [note: 'NULL = lopend; gevuld na opzegging (vandaag + opzegtermijn)']
+}
+
+Table bezoek {
+  id integer [pk, increment]
+  sporter_id integer [not null, ref: > sporter.id]
+  tijdstip timestamp [not null]
+
+  Indexes {
+    (sporter_id, tijdstip)
+  }
+}
+
+Table cursus {
+  id integer [pk, increment]
+  naam varchar(50) [not null, note: 'Yoga, Pilates, Paaldansen']
+  moment varchar(50) [not null]
+  max_deelnemers integer [not null]
+}
+
+Table cursusinschrijving {
+  id integer [pk, increment]
+  sporter_id integer [not null, ref: > sporter.id]
+  cursus_id integer [not null, ref: > cursus.id]
+  ingeschreven_op timestamp [not null]
+
+  Indexes {
+    (sporter_id, cursus_id) [unique, note: 'voorkomt dubbele inschrijving']
+  }
+}
+
+Table coach {
+  id integer [pk, increment]
+  naam varchar(100) [not null]
+}
+
+Table coach_moment {
+  id integer [pk, increment]
+  coach_id integer [not null, ref: > coach.id]
+  moment varchar(50) [not null]
+  sporter_id integer [ref: >? sporter.id, note: 'NULL = beschikbaar, gevuld = geboekt']
+
+  Indexes {
+    (coach_id, moment) [unique, note: 'voorkomt dubbele boeking']
+  }
+}
+
+Table medewerker {
+  id integer [pk, increment]
+  naam varchar(100) [not null]
+  pincode_hash char(64) [not null, note: 'SHA-256, nooit de pincode zelf']
+}
+
+Table toegangslog {
+  id integer [pk, increment]
+  sporter_id integer [note: 'geen FK: ook onbekende ID-pogingen worden gelogd']
+  tijdstip timestamp [not null]
+  resultaat varchar(200) [not null]
+}
+
+Table wijzigingslog {
+  id integer [pk, increment]
+  medewerker_id integer [ref: >? medewerker.id, note: 'NULL = wijziging door sporter zelf']
+  sporter_id integer [not null, ref: > sporter.id]
+  tijdstip timestamp [not null]
+  omschrijving varchar(300) [not null]
+}

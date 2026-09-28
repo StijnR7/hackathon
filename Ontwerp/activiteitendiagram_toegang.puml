@@ -1,0 +1,60 @@
+@startuml activiteitendiagram_toegang
+title Activiteitendiagram - Toegang op abonnementstype (US-01, US-02)
+
+|Sporter|
+start
+:Scant pas / voert sporter-ID in;
+:Kiest "Inchecken";
+
+|Systeem|
+:Zoek sporter op ID;
+if (Sporter bestaat?) then (nee)
+  :Log poging "onbekende sporter";
+  |Sporter|
+  :Ziet melding "Onbekende sporter.
+  Toegang geweigerd.";
+  stop
+else (ja)
+endif
+
+|Systeem|
+if (Abonnement actief?
+(geen einddatum of vandaag < einddatum)) then (nee)
+  :Log poging "abonnement niet actief";
+  |Sporter|
+  :Ziet melding "Abonnement opgezegd/niet actief.
+  Toegang geweigerd.";
+  stop
+else (ja)
+endif
+
+|Systeem|
+:Bepaal weeklimiet op abonnementstype;
+note right
+  1x per week  -> 1
+  2x per week  -> 2
+  Onbeperkt    -> geen limiet
+end note
+:Tel bezoeken in huidige ISO-week;
+
+if (Bezoeken deze week < weeklimiet?) then (nee)
+  :Log poging "weeklimiet bereikt";
+  |Sporter|
+  :Ziet melding "Weeklimiet bereikt.
+  Toegang geweigerd.";
+  stop
+else (ja)
+endif
+
+|Systeem|
+fork
+  :Registreer bezoek met tijdstip;
+fork again
+  :Log poging "toegang verleend";
+end fork
+
+|Sporter|
+:Ziet melding "Toegang verleend. Welkom!";
+:Loopt naar binnen;
+stop
+@enduml

@@ -1,0 +1,137 @@
+=================================================================
+FUNCTIONEEL ONTWERP - SPORTSCHOOL "DE KAST"
+Fase 1 - Werkproces B1-K1-W2 "Ontwerpt software"
+=================================================================
+
+1. AANLEIDING
+-------------
+Sportschool De Kast heeft een structureel personeelstekort. Receptie-
+medewerkers moeten kunnen bijspringen op de werkvloer. Daarom worden de
+handmatige receptietaken (deels) geautomatiseerd met een selfservice-
+applicatie:
+  - sporters toegang verlenen op basis van hun abonnementstype;
+  - sporters inschrijven voor cursussen;
+  - abonnementen annuleren;
+  - afspraken inplannen met een personal coach.
+
+2. DOEL VAN HET PROTOTYPE (MVP)
+-------------------------------
+Een werkend high-fidelity prototype waarmee De Kast een concreet beeld
+krijgt van het concept. Het prototype draait als console-applicatie op
+een kiosk-pc bij de ingang (zie Technisch ontwerp, hoofdstuk hardware).
+Data is dummydata en staat in het geheugen.
+
+3. ACTOREN
+----------
+  Sporter     Lid van De Kast. Logt in met het sporter-ID van de ledenpas
+              en regelt zelf: inchecken, cursussen, coach-afspraken en
+              opzeggen.
+  Medewerker  Personeel van De Kast. Logt in met medewerker-ID + pincode
+              en kan abonnementen zoeken, inzien, wijzigen en opzeggen, en
+              de logs bekijken.
+
+4. GEKOZEN USER STORIES EN PRIORITEIT (MoSCoW)
+----------------------------------------------
+Gekozen kernflow: variant A (Toegangsflow: US-01 + US-02). Omdat daar
+tijd over bleek, zijn variant B (US-04, US-05, US-06), variant C (US-07)
+en de stretch-story US-03 ook gerealiseerd. US-08 en US-09 gelden altijd.
+
+  Story  Prio    Omschrijving                                   Status
+  -----  ------  ---------------------------------------------  ---------
+  US-01  Must    Toegang op abonnementstype                     Gebouwd
+  US-02  Must    Abonnement annuleren                           Gebouwd
+  US-03  Should  Abonnementsbeheer door medewerker              Gebouwd
+  US-04  Must    Cursus-addendum vereist voor inschrijving      Gebouwd
+  US-05  Must    Inschrijven voor een cursus                    Gebouwd
+  US-06  Could   Cursusinschrijving annuleren                   Gebouwd
+  US-07  Should  Afspraak met personal coach                    Gebouwd
+  US-08  Must    Bescherming persoonsgegevens                   Gebouwd
+  US-09  Should  Betrouwbare, onderhoudbare software            Werkwijze
+
+5. ACCEPTATIECRITERIA (= 100%-BASIS VOOR REALISATIE EN TEST)
+------------------------------------------------------------
+Per criterium staat tussen haakjes welk testgeval het aantoont
+(zie Testplan.txt).
+
+US-01 Toegang op abonnementstype
+  AC-01.1 Bij 1x/week en 2x/week wordt het aantal bezoeken per week
+          gecontroleerd en gehandhaafd; de telling reset per
+          kalenderweek (ISO-week, maandag t/m zondag).  (TC-01..03, TC-05)
+  AC-01.2 Bij "onbeperkt" is er geen bezoeklimiet.        (TC-04)
+  AC-01.3 Bij geweigerde toegang krijgt de sporter een begrijpelijke
+          melding met de reden.                          (TC-02, TC-06, TC-11)
+  AC-01.4 Elke toegangspoging (geslaagd of geweigerd) wordt gelogd. (TC-07)
+
+US-02 Abonnement annuleren
+  AC-02.1 Annulering vraagt om een bevestiging (ja/nee). (AT-02)
+  AC-02.2 Na annulering vervalt de toegang na de opzegtermijn van 1 maand;
+          tot die datum blijft toegang geldig.          (TC-08, TC-10, TC-11)
+  AC-02.3 De sporter ontvangt een bevestiging met einddatum. (TC-08)
+  Alternatief: dubbel opzeggen geeft een melding.       (TC-09)
+
+US-03 Abonnementsbeheer door medewerker
+  AC-03.1 Medewerker kan sporters zoeken (naam of ID) en de status inzien.
+                                                         (TC-12..14)
+  AC-03.2 Wijzigingen worden gelogd met wie, wat en wanneer. (TC-15, TC-17)
+  Alternatief: "wijziging" zonder verandering wordt niet uitgevoerd. (TC-16)
+
+US-04 Cursus-addendum vereist
+  AC-04.1 Zonder addendum is inschrijven niet mogelijk; duidelijke
+          melding.                                       (TC-19)
+  AC-04.2 Beschikbare cursussen: yoga, pilates, paaldansen. (AT-03)
+
+US-05 Inschrijven voor een cursus
+  AC-05.1 De sporter ziet de beschikbare cursussen, momenten en bezetting
+          voordat hij/zij kiest.                         (AT-03)
+  AC-05.2 Inschrijving is pas geldig na bevestiging (ja/nee). (AT-03)
+  AC-05.3 Dubbele inschrijving wordt voorkomen.         (TC-20)
+  Extra: een volle cursus weigert nieuwe inschrijvingen. (TC-21)
+
+US-06 Cursusinschrijving annuleren
+  AC-06.1 Annulering geeft de plek weer vrij.           (TC-24, TC-26)
+  AC-06.2 De sporter ontvangt een bevestiging.          (TC-24)
+
+US-07 Afspraak met personal coach
+  AC-07.1 De sporter ziet beschikbare momenten per coach. (AT-04)
+  AC-07.2 Een gekozen moment kan niet dubbel geboekt worden. (TC-28)
+  AC-07.3 De sporter krijgt een bevestiging van de afspraak. (TC-27)
+
+US-08 Bescherming persoonsgegevens
+  AC-08.1 Invoer wordt gevalideerd; gevoelige gegevens worden niet
+          onnodig getoond of opgeslagen.                (TC-33, TC-34, AT-05)
+  AC-08.2 Toegangscontrole scheidt sporter- en medewerkerfuncties.
+                                                         (TC-31, TC-32, AT-06)
+  AC-08.3 Keuzes rond privacy/ethiek/security zijn toegelicht.
+          (zie 2_TechnischOntwerp.txt, hoofdstuk 6)
+
+6. FUNCTIONALITEIT PER ROL
+--------------------------
+Sporter (na inloggen met sporter-ID):
+  1. Inchecken (toegang)                 US-01
+  2. Mijn abonnement bekijken            US-01/US-02 (alleen eigen gegevens)
+  3. Inschrijven voor een cursus         US-04, US-05
+  4. Cursusinschrijving annuleren        US-06
+  5. Afspraak met personal coach         US-07
+  6. Abonnement opzeggen                 US-02
+
+Medewerker (na inloggen met ID + pincode):
+  1. Sporter zoeken en status inzien     US-03
+  2. Abonnement wijzigen (type/addendum) US-03
+  3. Abonnement opzeggen namens sporter  US-02, US-03
+  4. Overzicht cursussen                 US-05
+  5. Toegangslog bekijken                US-01
+  6. Wijzigingslog bekijken              US-03
+
+Zie 3_Wireframes.txt voor de schermen en de schermstroom, en
+usecasediagram.puml voor het use case diagram.
+
+7. AFBAKENING (BEWUST BUITEN SCOPE)
+-----------------------------------
+  - Geen echte database: data staat in het geheugen en reset bij afsluiten.
+    Het datamodel voor een database staat wel uitgewerkt (datamodel.dbml).
+  - Geen betalingen/facturatie.
+  - Sporter logt in met het ID van de ledenpas (in productie: NFC-pas
+    scannen). Er is geen wachtwoord voor sporters.
+  - Coach-afspraken annuleren en coaches/cursussen beheren vallen buiten
+    deze MVP.
+  - Geen grafische interface; de CLI laat de werking van het concept zien.
